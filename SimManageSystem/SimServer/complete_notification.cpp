@@ -16,6 +16,22 @@ void AcceptCompFailed(void* _lobj, void* _c_obj)
 	freeBObj(c_bobj);
 }
 
+struct tcp_keepalive alive_in = { TRUE, 1000 * 10, 1000 };
+struct tcp_keepalive alive_out = { 0 };
+unsigned long ulBytesReturn = 0;
+
+void doParse(int nType)
+{
+	_ConnectionPtr pConn = NULL;// 分配可用的数据库连接
+
+	// 进行数据库操作
+}
+
+void doParseData(const TCHAR* pRequest)
+{
+
+}
+
 void AcceptCompSuccess(DWORD dwTranstion, void* _lobj, void* _c_bobj)
 {
 	if (dwTranstion <= 0)
@@ -24,6 +40,16 @@ void AcceptCompSuccess(DWORD dwTranstion, void* _lobj, void* _c_bobj)
 	LISTEN_OBJ* lobj = (LISTEN_OBJ*)_lobj;
 	BUFFER_OBJ* c_bobj = (BUFFER_OBJ*)_c_bobj;
 	SOCKET_OBJ* c_sobj = c_bobj->pRelatedSObj;
+
+	//if (SOCKET_ERROR == WSAIoctl(c_sobj->sock, SIO_KEEPALIVE_VALS, &alive_in, sizeof(alive_in),
+	//	&alive_out, sizeof(alive_out), &ulBytesReturn, NULL, NULL))
+	//	_tprintf(_T("设置客户端连接心跳检测失败, errCode = %d\n"), WSAGetLastError());
+
+	//setsockopt(c_sobj->sock,
+	//	SOL_SOCKET,
+	//	SO_UPDATE_ACCEPT_CONTEXT,
+	//	(char*)&lobj->sListenSock, sizeof(lobj->sListenSock));
+	//_tprintf(_T("setsockoptn errcode = %d\n"), WSAGetLastError());
 
 	// 将客户端绑定到完成端口
 	if (NULL == CreateIoCompletionPort((HANDLE)c_sobj->sock, hCompPort, (ULONG_PTR)c_sobj, 0))
@@ -56,11 +82,29 @@ void AcceptCompSuccess(DWORD dwTranstion, void* _lobj, void* _c_bobj)
 			_tprintf(_T("客户端信息接收失败, errCode = %d\n"), WSAGetLastError());
 			goto error;
 		}
+
+		//Sleep(1000 * 5);
+		//if (SOCKET_ERROR == shutdown(c_sobj->sock, 0))
+		//	_tprintf(_T("shutdow errcode = %d\n"), WSAGetLastError());
 	}
 	else
 	{
 		// 处理命令
 		_tprintf(_T("接收到的数据: %s\n"), c_bobj->data);
+
+		// 解析收到的数据
+		doParseData(c_bobj->data);
+		// 判断操作类型
+		doParse(1);
+		// 进行业务处理
+
+		_stprintf_s(c_bobj->data, c_bobj->datalen, _T("已经收到信息，正在进行处理"));
+		c_bobj->dwRecvedCount = _tcslen(c_bobj->data) + 1;
+		c_bobj->SetIoRequestFunction(SendCompFailed, SendCompSuccess);
+		if (!PostSend(c_sobj, c_bobj))
+		{
+			goto error;
+		}
 	}
 
 	return;
@@ -131,5 +175,48 @@ void RecvCompSuccess(DWORD dwTransion, void* _sobj, void* _bobj)
 	{
 		// 处理命令
 		_tprintf(_T("接收到的数据: %s\n"), c_bobj->data);
+		_stprintf_s(c_bobj->data, c_bobj->datalen, _T("已经收到信息，正在进行处理"));
+		c_bobj->dwRecvedCount = _tcslen(c_bobj->data) + 1;
+		c_bobj->SetIoRequestFunction(SendCompFailed, SendCompSuccess);
+		if (!PostSend(c_sobj, c_bobj))
+		{
+			closesocket(c_sobj->sock);
+			freeSObj(c_sobj);
+			freeBObj(c_bobj);
+			return;
+		}
 	}
+}
+
+void SendCompFailed(void* _sobj, void* _bobj)
+{
+	SOCKET_OBJ* c_sobj = (SOCKET_OBJ*)_sobj;
+	BUFFER_OBJ* c_bobj = (BUFFER_OBJ*)_bobj;
+
+	closesocket(c_sobj->sock);
+	freeSObj(c_sobj);
+	freeBObj(c_bobj);
+}
+
+void SendCompSuccess(DWORD dwTransion, void* _sobj, void* _bobj)
+{
+	if (dwTransion <= 0)
+		return SendCompFailed(_sobj, _bobj);
+
+	SOCKET_OBJ* c_sobj = (SOCKET_OBJ*)_sobj;
+	BUFFER_OBJ* c_bobj = (BUFFER_OBJ*)_bobj;
+
+	c_bobj->dwSendedCount += dwTransion;
+	if (c_bobj->dwSendedCount < c_bobj->dwRecvedCount)
+	{
+		if (!PostSend(c_sobj, c_bobj))
+		{
+			closesocket(c_sobj->sock);
+			freeSObj(c_sobj);
+			freeBObj(c_bobj);
+			return;
+		}
+	}
+
+	// 需要投递一个关闭操作吗？
 }

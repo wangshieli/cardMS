@@ -33,6 +33,9 @@
     <ClInclude Include="objPool.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="db_operation.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -51,6 +54,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="objPool.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="db_operation.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
