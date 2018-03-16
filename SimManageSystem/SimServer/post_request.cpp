@@ -16,11 +16,18 @@ bool PostAcceptEx(LISTEN_OBJ* lobj)
 
 	c_sobj = allocSObj();
 	if (NULL == c_sobj)
+	{
+		freeBObj(c_bobj);
 		return false;
+	}
 
 	c_sobj->sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	if (INVALID_SOCKET == c_sobj->sock)
+	{
+		freeBObj(c_bobj);
+		freeSObj(c_sobj);
 		return false;
+	}
 
 	c_sobj->pRelatedBObj = c_bobj;
 	c_bobj->pRelatedSObj = c_sobj;
@@ -35,6 +42,9 @@ bool PostAcceptEx(LISTEN_OBJ* lobj)
 		if (WSA_IO_PENDING != WSAGetLastError())
 		{
 			_tprintf(_T("acceptex Ê§°Ü\n"));
+			closesocket(c_sobj->sock);
+			freeBObj(c_bobj);
+			freeSObj(c_sobj);
 			return false;
 		}
 	}

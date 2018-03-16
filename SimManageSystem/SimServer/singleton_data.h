@@ -80,6 +80,21 @@ public:
 	SOCKET sListenSock;
 	DWORD dwAcceptExPendingCount;
 	HANDLE hPostAcceptExEvent;
+
+	~_listen_obj()
+	{
+		if (INVALID_SOCKET != sListenSock)
+		{
+			closesocket(sListenSock);
+			sListenSock = INVALID_SOCKET;
+			if (NULL != hPostAcceptExEvent)
+			{
+				CloseHandle(hPostAcceptExEvent);
+				hPostAcceptExEvent = NULL;
+			}
+			dwAcceptExPendingCount = 0;
+		}
+	}
 public:
 	void init()
 	{
