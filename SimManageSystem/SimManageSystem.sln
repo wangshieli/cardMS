@@ -3,8 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.27428.2005
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DBLinkPool", "DBLinkPool\DBLinkPool.vcxproj", "{4548B0AD-B379-4B77-A25D-17C31A07135C}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SimServer", "SimServer\SimServer.vcxproj", "{0FE0CC3D-949F-4F57-A490-A4D27AAAE386}"
 EndProject
 Global
@@ -15,14 +13,6 @@ Global
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{4548B0AD-B379-4B77-A25D-17C31A07135C}.Debug|x64.ActiveCfg = Debug|x64
-		{4548B0AD-B379-4B77-A25D-17C31A07135C}.Debug|x64.Build.0 = Debug|x64
-		{4548B0AD-B379-4B77-A25D-17C31A07135C}.Debug|x86.ActiveCfg = Debug|Win32
-		{4548B0AD-B379-4B77-A25D-17C31A07135C}.Debug|x86.Build.0 = Debug|Win32
-		{4548B0AD-B379-4B77-A25D-17C31A07135C}.Release|x64.ActiveCfg = Release|x64
-		{4548B0AD-B379-4B77-A25D-17C31A07135C}.Release|x64.Build.0 = Release|x64
-		{4548B0AD-B379-4B77-A25D-17C31A07135C}.Release|x86.ActiveCfg = Release|Win32
-		{4548B0AD-B379-4B77-A25D-17C31A07135C}.Release|x86.Build.0 = Release|Win32
 		{0FE0CC3D-949F-4F57-A490-A4D27AAAE386}.Debug|x64.ActiveCfg = Debug|x64
 		{0FE0CC3D-949F-4F57-A490-A4D27AAAE386}.Debug|x64.Build.0 = Debug|x64
 		{0FE0CC3D-949F-4F57-A490-A4D27AAAE386}.Debug|x86.ActiveCfg = Debug|Win32
