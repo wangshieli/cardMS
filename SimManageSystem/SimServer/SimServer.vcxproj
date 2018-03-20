@@ -72,6 +72,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
+    <IncludePath>D:\msgpack-c\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
@@ -150,6 +151,7 @@
     <ClInclude Include="complete_notification.h" />
     <ClInclude Include="db_operation.h" />
     <ClInclude Include="objPool.h" />
+    <ClInclude Include="parse_request.h" />
     <ClInclude Include="post_request.h" />
     <ClInclude Include="singleton_data.h" />
     <ClInclude Include="stdafx.h" />
@@ -159,6 +161,7 @@
     <ClCompile Include="complete_notification.cpp" />
     <ClCompile Include="db_operation.cpp" />
     <ClCompile Include="objPool.cpp" />
+    <ClCompile Include="parse_request.cpp" />
     <ClCompile Include="post_request.cpp" />
     <ClCompile Include="SimServer.cpp" />
     <ClCompile Include="singleton_data.cpp" />

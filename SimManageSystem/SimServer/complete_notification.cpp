@@ -4,6 +4,24 @@
 #include "post_request.h"
 #include "objPool.h"
 
+#include "parse_request.h"
+
+struct tcp_keepalive alive_in = { TRUE, 1000 * 10, 1000 };
+struct tcp_keepalive alive_out = { 0 };
+unsigned long ulBytesReturn = 0;
+
+//void cn_closesocket(SOCKET_OBJ* sobj)
+//{
+//	if (NULL != sobj)
+//	{
+//		if (INVALID_SOCKET != sobj->sock)
+//		{
+//			closesocket(sobj->sock);
+//			sobj->sock = INVALID_SOCKET;
+//		}
+//	}
+//}
+
 void AcceptCompFailed(void* _lobj, void* _c_obj)
 {
 	LISTEN_OBJ* lobj = (LISTEN_OBJ*)_lobj;
@@ -14,22 +32,6 @@ void AcceptCompFailed(void* _lobj, void* _c_obj)
 	closesocket(c_sobj->sock);
 	freeSObj(c_sobj);
 	freeBObj(c_bobj);
-}
-
-struct tcp_keepalive alive_in = { TRUE, 1000 * 10, 1000 };
-struct tcp_keepalive alive_out = { 0 };
-unsigned long ulBytesReturn = 0;
-
-void doParse(int nType)
-{
-	_ConnectionPtr pConn = NULL;// 分配可用的数据库连接
-
-	// 进行数据库操作
-}
-
-void doParseData(const TCHAR* pRequest)
-{
-
 }
 
 void AcceptCompSuccess(DWORD dwTranstion, void* _lobj, void* _c_bobj)
@@ -74,7 +76,8 @@ void AcceptCompSuccess(DWORD dwTranstion, void* _lobj, void* _c_bobj)
 		&remoteAddr, &remoteAddrlen);
 
 	// 数据处理
-	if (NULL == strstr(c_bobj->data, "\r\n\r\n"))
+	//if (NULL == strstr(c_bobj->data, "\r\n\r\n"))
+	if (NULL == memchr(c_bobj->data + c_bobj->dwRecvedCount - 1, 0x0d, 1))
 	{
 		c_bobj->SetIoRequestFunction(RecvZeroCompFailed, RecvZeroCompSuccess);
 		if (!PostZeroRecv(c_sobj, c_bobj))
@@ -89,22 +92,32 @@ void AcceptCompSuccess(DWORD dwTranstion, void* _lobj, void* _c_bobj)
 	}
 	else
 	{
+		doParseData(c_bobj);
 		// 处理命令
-		_tprintf(_T("接收到的数据: %s\n"), c_bobj->data);
+		//printf("%d\n", c_bobj->dwRecvedCount);
+		//_tprintf(_T("接收到的数据: %s\n"), c_bobj->data);
+		//msgpack::sbuffer sbuf(c_bobj->dwRecvedCount);
+		//memcpy_s(sbuf.data(), c_bobj->dwRecvedCount, c_bobj->data, c_bobj->dwRecvedCount);
+		//msgpack::object_handle oh =
+		//	msgpack::unpack(c_bobj->data, c_bobj->dwRecvedCount);
+
+		//// print the deserialized object.
+		//msgpack::object obj = oh.get();
+		//std::cout << obj << std::endl;
 
 		// 解析收到的数据
-		doParseData(c_bobj->data);
-		// 判断操作类型
-		doParse(1);
-		// 进行业务处理
+		//doParseData(c_bobj->data);
+		//// 判断操作类型
+		//doParse(1);
+		//// 进行业务处理
 
-		_stprintf_s(c_bobj->data, c_bobj->datalen, _T("已经收到信息，正在进行处理"));
-		c_bobj->dwRecvedCount = _tcslen(c_bobj->data) + 1;
-		c_bobj->SetIoRequestFunction(SendCompFailed, SendCompSuccess);
-		if (!PostSend(c_sobj, c_bobj))
-		{
-			goto error;
-		}
+		//_stprintf_s(c_bobj->data, c_bobj->datalen, _T("已经收到信息，正在进行处理"));
+		//c_bobj->dwRecvedCount = _tcslen(c_bobj->data) + 1;
+		//c_bobj->SetIoRequestFunction(SendCompFailed, SendCompSuccess);
+		//if (!PostSend(c_sobj, c_bobj))
+		//{
+		//	goto error;
+		//}
 	}
 
 	return;
