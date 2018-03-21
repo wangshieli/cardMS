@@ -18,8 +18,8 @@ void ErrorInfo(BUFFER_OBJ* bobj, const TCHAR* pErrorInfo)
 {
 	msgpack::sbuffer sbuf;
 	msgpack::packer<msgpack::sbuffer> msgPack(&sbuf);
-	int nCmd = 0xb;
-	int nSubCmd = 0xb;
+	int nCmd = 0xbb;
+	int nSubCmd = 0xbb;
 	sbuf.write("\xfb\xfc", 6);
 	msgPack.pack_array(3);
 	msgPack.pack(nCmd);
@@ -82,27 +82,27 @@ bool doParseData(BUFFER_OBJ* bobj)
 			return false;
 		}
 		int cmdno = result_.get().via.array.ptr->as<int>();
-		if (cmdno == 0xa)
+		if (cmdno == MSG_USER_0X0A)
 		{
 			return doParseUser(result_, bobj);
 		}
-		else if (cmdno == 0xc)
+		else if (cmdno == MSG_SIM_OX0B)
 		{
 			return doParseSim(result_, bobj);
 		}
-		else if (cmdno == 0xe)
+		else if (cmdno == MSG_KH_OX0C)
 		{
 			return doParseKh(result_, bobj);
 		}
-		else if (cmdno == 0xf)
+		else if (cmdno == MSG_KHJL_OX0E)
 		{
 			return doParseKhjl(result_, bobj);
 		}
-		else if (cmdno == 0xb)
+		else if (cmdno == MSG_LLC_OX09)
 		{
 			return doParseLlc(result_, bobj);
 		}
-		else if (cmdno == 0x9)
+		else if (cmdno == MSG_LLTC_OX08)
 		{
 			return doParseLltc(result_, bobj);
 		}

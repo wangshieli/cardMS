@@ -74,7 +74,7 @@ bool doParseSim(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 
 	switch (nSubCmd)
 	{
-	case 1:
+	case DO_INSERT_DATA:
 	{
 		std::string strSim = (pObj++)->as<std::string>();
 		_tprintf(_T("p = %s\n"), strSim.c_str());
@@ -96,11 +96,9 @@ bool doParseSim(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 
 		msgpack::sbuffer sbuf;
 		msgpack::packer<msgpack::sbuffer> msgPack(&sbuf);
-		int nCmd = 0xb;
-		int nSubCmd = 0x6;
 		sbuf.write("\xfb\xfc", 6);
 		msgPack.pack_array(3);
-		msgPack.pack(nCmd);
+		msgPack.pack(B_MSG_SIM_OXBB);
 		msgPack.pack(nSubCmd);
 
 		const TCHAR* pSql = _T("insert into sim_tbl (id,jrhm,iccid,dxzh,zt,kh,khjl,llc,dqrq,xsrq,xfrq,jhrq,zxrq,dj,ssdq,lltc) \
@@ -123,7 +121,7 @@ value(null,'%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%f','%s'
 		DealLast(sbuf, bobj);
 	}
 	break;
-	case 2:// 使用接入号码查sim
+	case DO_SELECT_BY_KEY:// 使用接入号码查sim
 	{
 		std::string strSim = (pObj++)->as<std::string>();
 		_tprintf(_T("p = %s\n"), strSim.c_str());
@@ -142,11 +140,9 @@ value(null,'%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%f','%s'
 
 		msgpack::sbuffer sbuf;
 		msgpack::packer<msgpack::sbuffer> msgPack(&sbuf);
-		int nCmd = 0xb;
-		int nSubCmd = 0x7;
 		sbuf.write("\xfb\xfc", 6);
 		msgPack.pack_array(3 + lRstCount);
-		msgPack.pack(nCmd);
+		msgPack.pack(B_MSG_SIM_OXBB);
 		msgPack.pack(nSubCmd);
 		msgPack.pack(1);
 
@@ -155,7 +151,7 @@ value(null,'%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%f','%s'
 		DealLast(sbuf, bobj);
 	}
 	break;
-	case 3:// 根据tag返回一定数量的卡信息
+	case DO_SELECT_BY_ID:// 根据tag返回一定数量的卡信息
 	{
 		int nTag = (pObj++)->as<int>();
 		_tprintf(_T("ntag = %d\n"), nTag);
@@ -180,11 +176,9 @@ value(null,'%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%f','%s'
 
 		msgpack::sbuffer sbuf;
 		msgpack::packer<msgpack::sbuffer> msgPack(&sbuf);
-		int nCmd = 0xb;
-		int nSubCmd = 0x8;
 		sbuf.write("\xfb\xfc", 6);
 		msgPack.pack_array(3 + lRstCount);
-		msgPack.pack(nCmd);
+		msgPack.pack(B_MSG_SIM_OXBB);
 		msgPack.pack(nSubCmd);
 		msgPack.pack(1);
 

@@ -41,7 +41,7 @@ bool doParseLlc(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 
 	switch (nSubCmd)
 	{
-	case 1:
+	case DO_INSERT_DATA:
 	{
 		std::string strLx = (pObj++)->as<std::string>();
 		std::string strDm = (pObj++)->as<std::string>();
@@ -50,11 +50,9 @@ bool doParseLlc(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 
 		msgpack::sbuffer sbuf;
 		msgpack::packer<msgpack::sbuffer> msgPack(&sbuf);
-		int nCmd = 0xb;
-		int nSubCmd = 0x6;
 		sbuf.write("\xfb\xfc", 6);
 		msgPack.pack_array(3);
-		msgPack.pack(nCmd);
+		msgPack.pack(B_MSG_LLC_0X9B);
 		msgPack.pack(nSubCmd);
 
 		const TCHAR* pSql = _T("insert into llc_tbl (id,lx,dm,dxzh,bz) \
@@ -77,7 +75,7 @@ value(null,'%s','%s','%s','%s')");
 	}
 	break;
 
-	case 2:
+	case DO_SELECT_BY_KEY:
 	{
 		std::string strDm = (pObj++)->as<std::string>();
 		_tprintf(_T("p = %s\n"), strDm.c_str());
@@ -96,11 +94,9 @@ value(null,'%s','%s','%s','%s')");
 
 		msgpack::sbuffer sbuf;
 		msgpack::packer<msgpack::sbuffer> msgPack(&sbuf);
-		int nCmd = 0xb;
-		int nSubCmd = 0x7;
 		sbuf.write("\xfb\xfc", 6);
 		msgPack.pack_array(3 + lRstCount);
-		msgPack.pack(nCmd);
+		msgPack.pack(B_MSG_LLC_0X9B);
 		msgPack.pack(nSubCmd);
 		msgPack.pack(1);
 
@@ -110,7 +106,7 @@ value(null,'%s','%s','%s','%s')");
 	}
 	break;
 
-	case 3:
+	case DO_SELECT_BY_ID:
 	{
 		int nTag = (pObj++)->as<int>();
 		_tprintf(_T("ntag = %d\n"), nTag);
@@ -135,11 +131,9 @@ value(null,'%s','%s','%s','%s')");
 
 		msgpack::sbuffer sbuf;
 		msgpack::packer<msgpack::sbuffer> msgPack(&sbuf);
-		int nCmd = 0xb;
-		int nSubCmd = 0x8;
 		sbuf.write("\xfb\xfc", 6);
 		msgPack.pack_array(3 + lRstCount);
-		msgPack.pack(nCmd);
+		msgPack.pack(B_MSG_LLC_0X9B);
 		msgPack.pack(nSubCmd);
 		msgPack.pack(1);
 

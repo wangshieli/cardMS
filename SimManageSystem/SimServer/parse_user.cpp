@@ -47,7 +47,7 @@ bool doParseUser(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 
 	switch (nSubCmd)
 	{
-	case 1:// 用户登陆
+	case DO_LOGIN:// 用户登陆
 	{
 		std::string strUsername = (pObj++)->as<std::string>();
 		_tprintf(_T("p = %s\n"), strUsername.c_str());
@@ -76,11 +76,9 @@ bool doParseUser(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 
 		msgpack::sbuffer sbuf;
 		msgpack::packer<msgpack::sbuffer> msgPack(&sbuf);
-		int nCmd = 0xb;
-		int nSubCmd = 0x1;
 		sbuf.write("\xfb\xfc", 6);
 		msgPack.pack_array(5);
-		msgPack.pack(nCmd);
+		msgPack.pack(B_MSG_USER_OXAB);
 		msgPack.pack(nSubCmd);
 		msgPack.pack(1);
 		msgPack.pack(l1);
@@ -89,7 +87,7 @@ bool doParseUser(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 		DealLast(sbuf, bobj);
 	}
 	break;
-	case 2:// 用户注册
+	case DO_INSERT_DATA:// 用户注册
 	{
 		std::string strUsername = (pObj++)->as<std::string>();
 		_tprintf(_T("p = %s\n"), strUsername.c_str());
@@ -100,11 +98,9 @@ bool doParseUser(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 
 		msgpack::sbuffer sbuf;
 		msgpack::packer<msgpack::sbuffer> msgPack(&sbuf);
-		int nCmd = 0xb;
-		int nSubCmd = 0x2;
 		sbuf.write("\xfb\xfc", 6);
 		msgPack.pack_array(3);
-		msgPack.pack(nCmd);
+		msgPack.pack(B_MSG_USER_OXAB);
 		msgPack.pack(nSubCmd);
 
 		TCHAR strInsert[256];
@@ -123,7 +119,7 @@ bool doParseUser(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 		DealLast(sbuf, bobj);
 	}
 	break;
-	case 3:
+	case DO_UPDATE_DATA:
 	{
 		std::string strUsername = (pObj++)->as<std::string>();
 		_tprintf(_T("p = %s\n"), strUsername.c_str());
@@ -134,11 +130,9 @@ bool doParseUser(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 
 		msgpack::sbuffer sbuf;
 		msgpack::packer<msgpack::sbuffer> msgPack(&sbuf);
-		int nCmd = 0xb;
-		int nSubCmd = 0x3;
 		sbuf.write("\xfb\xfc", 6);
 		msgPack.pack_array(3);
-		msgPack.pack(nCmd);
+		msgPack.pack(B_MSG_USER_OXAB);
 		msgPack.pack(nSubCmd);
 
 		TCHAR strUpdate[256];
@@ -157,7 +151,7 @@ bool doParseUser(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 		DealLast(sbuf, bobj);
 	}
 	break;
-	case 4:// 查询user_tbl全部信息
+	case DO_SELECT_BY_ID:// 查询user_tbl全部信息
 	{
 		int nTag = (pObj++)->as<int>();
 		_tprintf(_T("ntag = %d\n"), nTag);
@@ -183,11 +177,9 @@ bool doParseUser(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 
 		msgpack::sbuffer sbuf;
 		msgpack::packer<msgpack::sbuffer> msgPack(&sbuf);
-		int nCmd = 0xb;
-		int nSubCmd = 0x4;
 		sbuf.write("\xfb\xfc", 6);
 		msgPack.pack_array(3 + lRstCount);
-		msgPack.pack(nCmd);
+		msgPack.pack(B_MSG_USER_OXAB);
 		msgPack.pack(nSubCmd);
 		msgPack.pack(1);
 
@@ -195,7 +187,7 @@ bool doParseUser(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 		DealLast(sbuf, bobj);
 	}
 	break;
-	case 5:// 根据用户名查询
+	case DO_SELECT_BY_KEY:// 根据用户名查询
 	{
 		std::string strUsername = (pObj++)->as<std::string>();
 		_tprintf(_T("p = %s\n"), strUsername.c_str());
@@ -217,11 +209,9 @@ bool doParseUser(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 
 		msgpack::sbuffer sbuf;
 		msgpack::packer<msgpack::sbuffer> msgPack(&sbuf);
-		int nCmd = 0xb;
-		int nSubCmd = 0x5;
 		sbuf.write("\xfb\xfc", 6);
 		msgPack.pack_array(3 + lRstCount);
-		msgPack.pack(nCmd);
+		msgPack.pack(B_MSG_USER_OXAB);
 		msgPack.pack(nSubCmd);
 		msgPack.pack(1);
 
