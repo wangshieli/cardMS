@@ -151,7 +151,10 @@
     <ClInclude Include="complete_notification.h" />
     <ClInclude Include="db_operation.h" />
     <ClInclude Include="objPool.h" />
+    <ClInclude Include="parse_data.h" />
     <ClInclude Include="parse_request.h" />
+    <ClInclude Include="parse_sim.h" />
+    <ClInclude Include="parse_user.h" />
     <ClInclude Include="post_request.h" />
     <ClInclude Include="singleton_data.h" />
     <ClInclude Include="stdafx.h" />
@@ -161,7 +164,10 @@
     <ClCompile Include="complete_notification.cpp" />
     <ClCompile Include="db_operation.cpp" />
     <ClCompile Include="objPool.cpp" />
+    <ClCompile Include="parse_data.cpp" />
     <ClCompile Include="parse_request.cpp" />
+    <ClCompile Include="parse_sim.cpp" />
+    <ClCompile Include="parse_user.cpp" />
     <ClCompile Include="post_request.cpp" />
     <ClCompile Include="SimServer.cpp" />
     <ClCompile Include="singleton_data.cpp" />

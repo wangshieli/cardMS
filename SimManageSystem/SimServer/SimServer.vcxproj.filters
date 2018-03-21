@@ -39,6 +39,15 @@
     <ClInclude Include="parse_request.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="parse_user.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="parse_sim.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="parse_data.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -63,6 +72,15 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="parse_request.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="parse_user.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="parse_sim.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="parse_data.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

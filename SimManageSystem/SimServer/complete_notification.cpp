@@ -229,7 +229,15 @@ void SendCompSuccess(DWORD dwTransion, void* _sobj, void* _bobj)
 			freeBObj(c_bobj);
 			return;
 		}
+		return;
 	}
 
-	// 需要投递一个关闭操作吗？
+	c_bobj->SetIoRequestFunction(RecvZeroCompFailed, RecvZeroCompSuccess);
+	if (!PostZeroRecv(c_sobj, c_bobj))
+	{
+		closesocket(c_sobj->sock);
+		freeSObj(c_sobj);
+		freeBObj(c_bobj);
+		return;
+	}
 }
