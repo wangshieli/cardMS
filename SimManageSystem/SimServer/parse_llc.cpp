@@ -10,7 +10,7 @@ void ReturnLlcInfo(_RecordsetPtr& pRecord, msgpack::packer<msgpack::sbuffer>& ms
 	VARIANT_BOOL bRt = pRecord->GetadoEOF();
 	while (!bRt)
 	{
-		msgPack.pack_array(4);
+		msgPack.pack_array(5);
 		_variant_t varLx = pRecord->GetCollect("lx");
 		AddData(varLx, msgPack);
 
@@ -19,6 +19,9 @@ void ReturnLlcInfo(_RecordsetPtr& pRecord, msgpack::packer<msgpack::sbuffer>& ms
 
 		_variant_t varDxzh = pRecord->GetCollect("dxzh");
 		AddData(varDxzh, msgPack);
+
+		_variant_t varXgrq = pRecord->GetCollect("xgrq");
+		AddData(varXgrq, msgPack);
 
 		_variant_t varBz = pRecord->GetCollect("bz");
 		AddData(varBz, msgPack);
@@ -55,8 +58,7 @@ bool doParseLlc(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 		msgPack.pack(B_MSG_LLC_0X9B);
 		msgPack.pack(nSubCmd);
 
-		const TCHAR* pSql = _T("insert into llc_tbl (id,lx,dm,dxzh,bz) \
-value(null,'%s','%s','%s','%s')");
+		const TCHAR* pSql = _T("insert into llc_tbl (id,lx,dm,dxzh,bz,xgrq) value(null,'%s','%s','%s','%s',now())");
 
 		TCHAR strInsert[512];
 		memset(strInsert, 0x00, sizeof(strInsert));

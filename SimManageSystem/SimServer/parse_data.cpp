@@ -71,7 +71,7 @@ void AddData(const _variant_t& var, msgpack::packer<msgpack::sbuffer>& msgPack)
 		VariantTimeToSystemTime(var.date, &st);
 		TCHAR date[32];
 		memset(date, 0x00, sizeof(date));
-		_stprintf_s(date, 32, _T("%04d-%02d-%02d"), st.wYear, st.wMonth, st.wDay);
+		_stprintf_s(date, 32, _T("%04d-%02d-%02d %02d:%02d:%02d"), st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond);
 		msgPack.pack(date);
 	}
 	break;

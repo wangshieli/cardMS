@@ -10,7 +10,7 @@ void ReturnKhjlInfo(_RecordsetPtr& pRecord, msgpack::packer<msgpack::sbuffer>& m
 	VARIANT_BOOL bRt = pRecord->GetadoEOF();
 	while (!bRt)
 	{
-		msgPack.pack_array(5);
+		msgPack.pack_array(6);
 		_variant_t varXm = pRecord->GetCollect("xm");
 		AddData(varXm, msgPack);
 
@@ -23,6 +23,9 @@ void ReturnKhjlInfo(_RecordsetPtr& pRecord, msgpack::packer<msgpack::sbuffer>& m
 
 		_variant_t varGf = pRecord->GetCollect("gf");
 		AddData(varGf, msgPack);
+
+		_variant_t varXgrq = pRecord->GetCollect("xgrq");
+		AddData(varXgrq, msgPack);
 
 		_variant_t varBz = pRecord->GetCollect("bz");
 		AddData(varBz, msgPack);
@@ -60,8 +63,7 @@ bool doParseKhjl(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 		msgPack.pack(B_MSG_KHJL_OXEB);
 		msgPack.pack(nSubCmd);
 
-		const TCHAR* pSql = _T("insert into khjl_tbl (id,xm,lxfs,user,gf,bz) \
-value(null,'%s','%s','%s','%s','%s')");
+		const TCHAR* pSql = _T("insert into khjl_tbl (id,xm,lxfs,user,gf,bz,xgrq) value(null,'%s','%s','%s','%s','%s',now())");
 
 		TCHAR strInsert[512];
 		memset(strInsert, 0x00, sizeof(strInsert));

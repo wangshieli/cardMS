@@ -10,7 +10,7 @@ void ReturnKhInfo(_RecordsetPtr& pRecord, msgpack::packer<msgpack::sbuffer>& msg
 	VARIANT_BOOL bRt = pRecord->GetadoEOF();
 	while (!bRt)
 	{
-		msgPack.pack_array(7);
+		msgPack.pack_array(8);
 		_variant_t varKhmc = pRecord->GetCollect("khmc");
 		AddData(varKhmc, msgPack);
 
@@ -28,6 +28,9 @@ void ReturnKhInfo(_RecordsetPtr& pRecord, msgpack::packer<msgpack::sbuffer>& msg
 
 		_variant_t varGf = pRecord->GetCollect("gf");
 		AddData(varGf, msgPack);
+
+		_variant_t varXgrq = pRecord->GetCollect("xgrq");
+		AddData(varXgrq, msgPack);
 
 		_variant_t varBz = pRecord->GetCollect("bz");
 		AddData(varBz, msgPack);
@@ -67,8 +70,7 @@ bool doParseKh(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 		msgPack.pack(B_MSG_KHJL_OXEB);
 		msgPack.pack(nSubCmd);
 
-		const TCHAR* pSql = _T("insert into kh_tbl (id,khmc,lxfs,khjl,user,khdm,gf,bz) \
-value(null,'%s','%s','%s','%s','%s','%s','%s')");
+		const TCHAR* pSql = _T("insert into kh_tbl (id,khmc,lxfs,khjl,user,khdm,gf,bz,xgrq) value(null,'%s','%s','%s','%s','%s','%s','%s',now())");
 
 		TCHAR strInsert[512];
 		memset(strInsert, 0x00, sizeof(strInsert));
