@@ -2,9 +2,6 @@
 #include <msgpack.hpp>
 #include "singleton_data.h"
 #include "parse_user.h"
-#include "post_request.h"
-#include "complete_notification.h"
-#include "objPool.h"
 #include "db_operation.h"
 #include "parse_data.h"
 
@@ -76,12 +73,12 @@ bool doParseUser(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 		int nSubCmd = 0x1;
 		sbuf.write("\xfb\xfc", 6);
 		msgPack.pack_array(5);
-		msgPack.pack(nCmd);// 登陆返回
+		msgPack.pack(nCmd);
 		msgPack.pack(nSubCmd);
-		msgPack.pack(1);// 登陆成功 1  失败0
-		msgPack.pack(l1);// 需要返回的权限
-		msgPack.pack(l2);// 需要返回的权限
-						 // 增加发送
+		msgPack.pack(1);
+		msgPack.pack(l1);
+		msgPack.pack(l2);
+						 
 		DealLast(sbuf, bobj);
 	}
 	break;
@@ -100,12 +97,12 @@ bool doParseUser(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 		int nSubCmd = 0x2;
 		sbuf.write("\xfb\xfc", 6);
 		msgPack.pack_array(3);
-		msgPack.pack(nCmd);// 登陆返回
+		msgPack.pack(nCmd);
 		msgPack.pack(nSubCmd);
 
 		TCHAR strInsert[256];
 		memset(strInsert, 0x00, sizeof(strInsert));
-		_stprintf_s(strInsert, 256, _T("insert into user_tbl (username,password,l1,l2) value('%s','%s',%d,%d)"), strUsername.c_str(), strPassword.c_str(), l1, l2);
+		_stprintf_s(strInsert, 256, _T("insert into user_tbl (id,username,password,l1,l2) value(null,'%s','%s',%d,%d)"), strUsername.c_str(), strPassword.c_str(), l1, l2);
 		if (!ExcuteSql(strInsert, true))
 		{
 			msgPack.pack(0);
@@ -113,7 +110,7 @@ bool doParseUser(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 		}
 		else
 		{
-			msgPack.pack(1);// 登陆成功 1  失败0
+			msgPack.pack(1);
 		}
 
 		DealLast(sbuf, bobj);
@@ -134,7 +131,7 @@ bool doParseUser(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 		int nSubCmd = 0x3;
 		sbuf.write("\xfb\xfc", 6);
 		msgPack.pack_array(3);
-		msgPack.pack(nCmd);// 登陆返回
+		msgPack.pack(nCmd);
 		msgPack.pack(nSubCmd);
 
 		TCHAR strUpdate[256];
@@ -147,7 +144,7 @@ bool doParseUser(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 		}
 		else
 		{
-			msgPack.pack(1);// 登陆成功 1  失败0
+			msgPack.pack(1);
 		}
 
 		DealLast(sbuf, bobj);
@@ -172,7 +169,6 @@ bool doParseUser(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 		if (pRecord->adoEOF)
 		{
 			_tprintf(_T("没有找到数据"));
-			return false;
 		}
 
 		long lRstCount = pRecord->GetRecordCount();
@@ -184,9 +180,9 @@ bool doParseUser(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 		int nSubCmd = 0x4;
 		sbuf.write("\xfb\xfc", 6);
 		msgPack.pack_array(3 + lRstCount);
-		msgPack.pack(nCmd);// 登陆返回
+		msgPack.pack(nCmd);
 		msgPack.pack(nSubCmd);
-		msgPack.pack(1);// 登陆成功 1  失败0
+		msgPack.pack(1);
 
 		ReturnUserInfo(pRecord, msgPack);
 		DealLast(sbuf, bobj);
@@ -206,7 +202,6 @@ bool doParseUser(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 		if (pRecord->adoEOF)
 		{
 			_tprintf(_T("没有找到数据"));
-			return false;
 		}
 		int lRstCount = pRecord->GetRecordCount();
 		int l1 = pRecord->GetCollect("l1");

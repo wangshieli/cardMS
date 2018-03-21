@@ -48,6 +48,18 @@
     <ClInclude Include="parse_data.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="parse_kh.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="parse_khjl.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="parse_llc.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="parse_lltc.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -81,6 +93,18 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="parse_data.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="parse_kh.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="parse_khjl.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="parse_llc.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="parse_lltc.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

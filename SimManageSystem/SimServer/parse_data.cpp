@@ -46,3 +46,44 @@ void DealLast(msgpack::sbuffer& sBuf, BUFFER_OBJ* bobj)
 		return;
 	}
 }
+
+void AddData(const _variant_t& var, msgpack::packer<msgpack::sbuffer>& msgPack)
+{
+	switch (var.vt)
+	{
+	case VT_BSTR:
+	case VT_LPSTR:
+	case VT_LPWSTR:
+	{
+		msgPack.pack((const TCHAR*)(_bstr_t)var);
+	}
+	break;
+
+	case VT_NULL:
+	{
+		msgPack.pack(_T(""));
+	}
+	break;
+
+	case VT_DATE:
+	{
+		SYSTEMTIME st;
+		VariantTimeToSystemTime(var.date, &st);
+		TCHAR date[32];
+		memset(date, 0x00, sizeof(date));
+		_stprintf_s(date, 32, _T("%04d-%02d-%02d"), st.wYear, st.wMonth, st.wDay);
+		msgPack.pack(date);
+	}
+	break;
+
+	case VT_R8:
+	{
+		msgPack.pack(var.dblVal);
+	}
+	break;
+
+	case VT_UNKNOWN:
+	default:
+		break;
+	}
+}

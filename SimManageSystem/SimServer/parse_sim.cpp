@@ -2,52 +2,8 @@
 #include <msgpack.hpp>
 #include "singleton_data.h"
 #include "parse_sim.h"
-#include "post_request.h"
-#include "complete_notification.h"
-#include "objPool.h"
 #include "db_operation.h"
 #include "parse_data.h"
-
-void AddData(const _variant_t& var, msgpack::packer<msgpack::sbuffer>& msgPack)
-{
-	switch (var.vt)
-	{
-	case VT_BSTR:
-	case VT_LPSTR:
-	case VT_LPWSTR:
-	{
-		msgPack.pack((const TCHAR*)(_bstr_t)var);
-	}
-	break;
-
-	case VT_NULL:
-	{
-		msgPack.pack(_T(""));
-	}
-	break;
-
-	case VT_DATE:
-	{
-		SYSTEMTIME st;
-		VariantTimeToSystemTime(var.date, &st);
-		TCHAR date[32];
-		memset(date, 0x00, sizeof(date));
-		_stprintf_s(date, 32, _T("%04d-%02d-%02d"), st.wYear, st.wMonth, st.wDay);
-		msgPack.pack(date);
-	}
-	break;
-
-	case VT_R8:
-	{
-		msgPack.pack(var.dblVal);
-	}
-	break;
-
-	case VT_UNKNOWN:
-	default:
-		break;
-	}
-}
 
 void ReturnSimInfo(_RecordsetPtr& pRecord, msgpack::packer<msgpack::sbuffer>& msgPack)
 {
@@ -140,15 +96,15 @@ bool doParseSim(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 		int nSubCmd = 0x6;
 		sbuf.write("\xfb\xfc", 6);
 		msgPack.pack_array(3);
-		msgPack.pack(nCmd);// 登陆返回
+		msgPack.pack(nCmd);
 		msgPack.pack(nSubCmd);
 
 		const TCHAR* pSql = _T("insert into sim_tbl (id,jrhm,iccid,dxzh,zt,kh,khjl,llc,dqrq,xsrq,xfrq,jhrq,zxrq,dj,ssdq,lltc) \
 value(null,'%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%f','%s','%s')");
 
-		TCHAR strInsert[1024];
+		TCHAR strInsert[512];
 		memset(strInsert, 0x00, sizeof(strInsert));
-		_stprintf_s(strInsert, 1024, pSql, strSim.c_str(), strIccid.c_str(), strDxzh.c_str(), strZt.c_str(), strKh.c_str(), strKhjl.c_str(), strLlc.c_str(), strDqrq.c_str(), strXsrq.c_str(), strXfrq.c_str(),
+		_stprintf_s(strInsert, 512, pSql, strSim.c_str(), strIccid.c_str(), strDxzh.c_str(), strZt.c_str(), strKh.c_str(), strKhjl.c_str(), strLlc.c_str(), strDqrq.c_str(), strXsrq.c_str(), strXfrq.c_str(),
 			strJhrq.c_str(), strZxrq.c_str(), dDj, strSsdq.c_str(), strLltc.c_str());
 		if (!ExcuteSql(strInsert, true))
 		{
@@ -157,7 +113,7 @@ value(null,'%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%f','%s'
 		}
 		else
 		{
-			msgPack.pack(1);// 登陆成功 1  失败0
+			msgPack.pack(1);
 		}
 
 		DealLast(sbuf, bobj);
@@ -177,7 +133,6 @@ value(null,'%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%f','%s'
 		if (pRecord->adoEOF)
 		{
 			_tprintf(_T("没有找到数据"));
-			return false;
 		}
 		int lRstCount = pRecord->GetRecordCount();
 
@@ -214,7 +169,6 @@ value(null,'%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%f','%s'
 		if (pRecord->adoEOF)
 		{
 			_tprintf(_T("没有找到数据"));
-			return false;
 		}
 
 		long lRstCount = pRecord->GetRecordCount();
@@ -226,7 +180,7 @@ value(null,'%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%f','%s'
 		int nSubCmd = 0x8;
 		sbuf.write("\xfb\xfc", 6);
 		msgPack.pack_array(3 + lRstCount);
-		msgPack.pack(nCmd);// 登陆返回
+		msgPack.pack(nCmd);
 		msgPack.pack(nSubCmd);
 		msgPack.pack(1);
 
