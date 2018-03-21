@@ -59,6 +59,10 @@ void ReturnSimInfo(_RecordsetPtr& pRecord, msgpack::packer<msgpack::sbuffer>& ms
 		pRecord->MoveNext();
 		bRt = pRecord->GetadoEOF();
 	}
+
+	pRecord->Close();
+	pRecord.Release();
+	pRecord = NULL;
 }
 
 bool doParseSim(msgpack::unpacked& result_, BUFFER_OBJ* bobj)

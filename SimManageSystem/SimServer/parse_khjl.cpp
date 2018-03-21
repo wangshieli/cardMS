@@ -30,6 +30,10 @@ void ReturnKhjlInfo(_RecordsetPtr& pRecord, msgpack::packer<msgpack::sbuffer>& m
 		pRecord->MoveNext();
 		bRt = pRecord->GetadoEOF();
 	}
+
+	pRecord->Close();
+	pRecord.Release();
+	pRecord = NULL;
 }
 
 bool doParseKhjl(msgpack::unpacked& result_, BUFFER_OBJ* bobj)

@@ -32,6 +32,10 @@ void ReturnUserInfo(_RecordsetPtr& pRecord, msgpack::packer<msgpack::sbuffer>& m
 		pRecord->MoveNext();
 		bRt = pRecord->GetadoEOF();
 	}
+
+	pRecord->Close();
+	pRecord.Release();
+	pRecord = NULL;
 }
 
 bool doParseUser(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
@@ -66,6 +70,9 @@ bool doParseUser(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 		int l1 = pRecord->GetCollect("l1");
 		int l2 = pRecord->GetCollect("l2");
 		_tprintf(_T("level: %d, %d, %d\n"), l1, l2, nn);
+		pRecord->Close();
+		pRecord.Release();
+		pRecord = NULL;
 
 		msgpack::sbuffer sbuf;
 		msgpack::packer<msgpack::sbuffer> msgPack(&sbuf);

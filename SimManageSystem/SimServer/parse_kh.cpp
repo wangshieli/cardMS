@@ -35,6 +35,10 @@ void ReturnKhInfo(_RecordsetPtr& pRecord, msgpack::packer<msgpack::sbuffer>& msg
 		pRecord->MoveNext();
 		bRt = pRecord->GetadoEOF();
 	}
+
+	pRecord->Close();
+	pRecord.Release();
+	pRecord = NULL;
 }
 
 bool doParseKh(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
