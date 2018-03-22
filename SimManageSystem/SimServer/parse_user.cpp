@@ -47,46 +47,6 @@ bool doParseUser(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 
 	switch (nSubCmd)
 	{
-	case DO_LOGIN:// 用户登陆
-	{
-		std::string strUsername = (pObj++)->as<std::string>();
-		_tprintf(_T("p = %s\n"), strUsername.c_str());
-		std::string strPassword = (pObj++)->as<std::string>();
-		_tprintf(_T("p1 = %s\n"), strPassword.c_str());
-
-		const TCHAR* pSql = _T("select * from user_tbl where username = '%s' and password = '%s'");
-		TCHAR sql[256];
-		memset(sql, 0x00, 256);
-		_stprintf_s(sql, 256, pSql, strUsername.c_str(), strPassword.c_str());
-		_RecordsetPtr pRecord;
-		if (!GetRecordSet(sql, pRecord, adCmdText, true))
-			return false;
-		if (pRecord->adoEOF)
-		{
-			_tprintf(_T("没有找到数据"));
-			return false;
-		}
-		int nn = pRecord->GetRecordCount();
-		int l1 = pRecord->GetCollect("l1");
-		int l2 = pRecord->GetCollect("l2");
-		_tprintf(_T("level: %d, %d, %d\n"), l1, l2, nn);
-		pRecord->Close();
-		pRecord.Release();
-		pRecord = NULL;
-
-		msgpack::sbuffer sbuf;
-		msgpack::packer<msgpack::sbuffer> msgPack(&sbuf);
-		sbuf.write("\xfb\xfc", 6);
-		msgPack.pack_array(5);
-		msgPack.pack(B_MSG_USER_OXAB);
-		msgPack.pack(nSubCmd);
-		msgPack.pack(1);
-		msgPack.pack(l1);
-		msgPack.pack(l2);
-						 
-		DealLast(sbuf, bobj);
-	}
-	break;
 	case DO_INSERT_DATA:// 用户注册
 	{
 		std::string strUsername = (pObj++)->as<std::string>();
@@ -119,38 +79,41 @@ bool doParseUser(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 		DealLast(sbuf, bobj);
 	}
 	break;
-	case DO_UPDATE_DATA:
+
+	case DO_SELECT_BY_KEY:// 根据用户名查询
 	{
 		std::string strUsername = (pObj++)->as<std::string>();
 		_tprintf(_T("p = %s\n"), strUsername.c_str());
-		std::string strPassword = (pObj++)->as<std::string>();
-		_tprintf(_T("p1 = %s\n"), strPassword.c_str());
-		int l1 = (pObj++)->as<int>();
-		int l2 = (pObj++)->as<int>();
+		const TCHAR* pSql = _T("select * from user_tbl where username = '%s'");
+		TCHAR sql[256];
+		memset(sql, 0x00, 256);
+		_stprintf_s(sql, 256, pSql, strUsername.c_str());
+		_RecordsetPtr pRecord;
+		if (!GetRecordSet(sql, pRecord, adCmdText, true))
+			return false;
+		if (pRecord->adoEOF)
+		{
+			_tprintf(_T("没有找到数据"));
+		}
+		int lRstCount = pRecord->GetRecordCount();
+		int l1 = pRecord->GetCollect("l1");
+		int l2 = pRecord->GetCollect("l2");
+		_tprintf(_T("level: %d, %d, %d\n"), l1, l2, lRstCount);
 
 		msgpack::sbuffer sbuf;
 		msgpack::packer<msgpack::sbuffer> msgPack(&sbuf);
 		sbuf.write("\xfb\xfc", 6);
-		msgPack.pack_array(3);
+		msgPack.pack_array(3 + lRstCount);
 		msgPack.pack(B_MSG_USER_OXAB);
 		msgPack.pack(nSubCmd);
+		msgPack.pack(1);
 
-		TCHAR strUpdate[256];
-		memset(strUpdate, 0x00, sizeof(strUpdate));
-		_stprintf_s(strUpdate, 256, _T("update user_tbl set l1 = %d, l2 = %d where username = '%s' and password = '%s'"), l1, l2, strUsername.c_str(), strPassword.c_str());
-		if (!ExcuteSql(strUpdate, true))
-		{
-			msgPack.pack(0);
-			_tprintf(_T("更新失败\n"));
-		}
-		else
-		{
-			msgPack.pack(1);
-		}
+		ReturnUserInfo(pRecord, msgPack);
 
 		DealLast(sbuf, bobj);
 	}
 	break;
+	
 	case DO_SELECT_BY_ID:// 查询user_tbl全部信息
 	{
 		int nTag = (pObj++)->as<int>();
@@ -187,39 +150,81 @@ bool doParseUser(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 		DealLast(sbuf, bobj);
 	}
 	break;
-	case DO_SELECT_BY_KEY:// 根据用户名查询
+
+	case DO_UPDATE_DATA:
 	{
 		std::string strUsername = (pObj++)->as<std::string>();
 		_tprintf(_T("p = %s\n"), strUsername.c_str());
-		const TCHAR* pSql = _T("select * from user_tbl where username = '%s'");
+		std::string strPassword = (pObj++)->as<std::string>();
+		_tprintf(_T("p1 = %s\n"), strPassword.c_str());
+		int l1 = (pObj++)->as<int>();
+		int l2 = (pObj++)->as<int>();
+
+		msgpack::sbuffer sbuf;
+		msgpack::packer<msgpack::sbuffer> msgPack(&sbuf);
+		sbuf.write("\xfb\xfc", 6);
+		msgPack.pack_array(3);
+		msgPack.pack(B_MSG_USER_OXAB);
+		msgPack.pack(nSubCmd);
+
+		TCHAR strUpdate[256];
+		memset(strUpdate, 0x00, sizeof(strUpdate));
+		_stprintf_s(strUpdate, 256, _T("update user_tbl set l1 = %d, l2 = %d where username = '%s' and password = '%s'"), l1, l2, strUsername.c_str(), strPassword.c_str());
+		if (!ExcuteSql(strUpdate, true))
+		{
+			msgPack.pack(0);
+			_tprintf(_T("更新失败\n"));
+		}
+		else
+		{
+			msgPack.pack(1);
+		}
+
+		DealLast(sbuf, bobj);
+	}
+	break;
+
+	case DO_LOGIN:// 用户登陆
+	{
+		std::string strUsername = (pObj++)->as<std::string>();
+		_tprintf(_T("p = %s\n"), strUsername.c_str());
+		std::string strPassword = (pObj++)->as<std::string>();
+		_tprintf(_T("p1 = %s\n"), strPassword.c_str());
+
+		const TCHAR* pSql = _T("select * from user_tbl where username = '%s' and password = '%s'");
 		TCHAR sql[256];
 		memset(sql, 0x00, 256);
-		_stprintf_s(sql, 256, pSql, strUsername.c_str());
+		_stprintf_s(sql, 256, pSql, strUsername.c_str(), strPassword.c_str());
 		_RecordsetPtr pRecord;
 		if (!GetRecordSet(sql, pRecord, adCmdText, true))
 			return false;
 		if (pRecord->adoEOF)
 		{
 			_tprintf(_T("没有找到数据"));
+			return false;
 		}
-		int lRstCount = pRecord->GetRecordCount();
+		int nn = pRecord->GetRecordCount();
 		int l1 = pRecord->GetCollect("l1");
 		int l2 = pRecord->GetCollect("l2");
-		_tprintf(_T("level: %d, %d, %d\n"), l1, l2, lRstCount);
+		_tprintf(_T("level: %d, %d, %d\n"), l1, l2, nn);
+		pRecord->Close();
+		pRecord.Release();
+		pRecord = NULL;
 
 		msgpack::sbuffer sbuf;
 		msgpack::packer<msgpack::sbuffer> msgPack(&sbuf);
 		sbuf.write("\xfb\xfc", 6);
-		msgPack.pack_array(3 + lRstCount);
+		msgPack.pack_array(5);
 		msgPack.pack(B_MSG_USER_OXAB);
 		msgPack.pack(nSubCmd);
 		msgPack.pack(1);
-
-		ReturnUserInfo(pRecord, msgPack);
+		msgPack.pack(l1);
+		msgPack.pack(l2);
 
 		DealLast(sbuf, bobj);
 	}
 	break;
+	
 	default:
 		break;
 	}
