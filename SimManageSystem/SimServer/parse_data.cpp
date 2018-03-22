@@ -35,7 +35,6 @@ void DealLast(msgpack::sbuffer& sBuf, BUFFER_OBJ* bobj)
 
 	memcpy(bobj->data, pCh, nLen);// ÓÅ»¯
 	bobj->dwRecvedCount = nLen;
-	//Send(pCh, nLen);
 	bobj->SetIoRequestFunction(SendCompFailed, SendCompSuccess);
 	SOCKET_OBJ* sobj = bobj->pRelatedSObj;
 	if (!PostSend(sobj, bobj))
@@ -59,9 +58,60 @@ void AddData(const _variant_t& var, msgpack::packer<msgpack::sbuffer>& msgPack)
 	}
 	break;
 
-	case VT_NULL:
+	case VT_I1:
+	case VT_UI1:
 	{
-		msgPack.pack(_T(""));
+		msgPack.pack(var.bVal);
+	}
+	break;
+
+	case VT_I2:
+	{
+		msgPack.pack(var.iVal);
+	}
+	break;
+
+	case VT_UI2:
+	{
+		msgPack.pack(var.uiVal);
+	}
+	break;
+
+	case VT_INT:
+	{
+		msgPack.pack(var.intVal);
+	}
+	break;
+
+	case VT_I4:
+	case VT_I8:
+	{
+		msgPack.pack(var.lVal);
+	}
+	break;
+
+	case VT_UINT:
+	{
+		msgPack.pack(var.uintVal);
+	}
+	break;
+
+	case VT_UI4:
+	case VT_UI8:
+	{
+		msgPack.pack(var.ulVal);
+	}
+	break;
+
+	case VT_R4:
+	{
+		msgPack.pack(var.fltVal);
+	}
+	break;
+
+	case VT_R8:
+	{
+		msgPack.pack(var.dblVal);
 	}
 	break;
 
@@ -76,14 +126,16 @@ void AddData(const _variant_t& var, msgpack::packer<msgpack::sbuffer>& msgPack)
 	}
 	break;
 
-	case VT_R8:
+	case VT_NULL:
+	case VT_EMPTY:
 	{
-		msgPack.pack(var.dblVal);
+		msgPack.pack(_T(""));
 	}
 	break;
 
 	case VT_UNKNOWN:
 	default:
+		msgPack.pack(_T("VT_UNKNOWN"));
 		break;
 	}
 }

@@ -157,6 +157,7 @@ unsigned int _stdcall tfunc_dblink(LPVOID pVoid)
 				v_DBLinkVector.push_back(conptr);
 				LeaveCriticalSection(&cs_DBLinkVector);
 				SetEvent(hEmptyEvent);
+				_tprintf(_T("数据库连接回收\n"));
 			}
 			break;
 
@@ -174,7 +175,6 @@ bool CreateDBConnection(_ConnectionPtr& conptr)
 	try
 	{
 		conptr.CreateInstance(__uuidof(Connection));
-	//	const TCHAR* strConn = _T("");
 		TCHAR strConn[256];
 		memset(strConn, 0x00, sizeof(strConn));
 		_stprintf_s(strConn, 256, _T("DATABASE=%s;DSN=%s;OPTION=0;PWD=%s;PORT=0;SERVER=localhost;UID=%s"), DB_NAME, DB_DSN, DB_PWD, DB_USER);
@@ -182,12 +182,18 @@ bool CreateDBConnection(_ConnectionPtr& conptr)
 		HRESULT hr = conptr->Open(_bstr_t(strConn), "", "", adModeUnknown);
 		if (FAILED(hr))
 			return false;
+
+		return true;
 	}
 	catch (_com_error& e)
 	{
-		_tprintf(_T("123\n"));
+		_tprintf(_T("%s-%d:错误信息:%s 错误代码:%08lx 错误源:%s 错误描述:%s\n"), __FILE__, __LINE__, e.ErrorMessage(), e.Error(), (const TCHAR*)e.Source(), (const TCHAR*)e.Description());
 	}
-	return true;
+	catch (...)
+	{
+		_tprintf(_T("%s-%d:出现异常:%08lx\n"), __FILE__, __LINE__, GetLastError());
+	}
+	return false;
 }
 
 _ConnectionPtr *GetConnectionPtr()
@@ -253,12 +259,11 @@ bool ExcuteWithoutCheck(_ConnectionPtr& conptr, const TCHAR* bSql)
 		}
 		catch (_com_error& e)
 		{
-			_tprintf(_T("DB_COM_ERROR 错误编号:%08lx  错误信息:%s 错误源:%s 错误描述:%s\n"), e.Error(), e.ErrorMessage(), (const TCHAR*)e.Source(), (const TCHAR*)e.Description());
-		//	_tprintf(_T("DB_COM_ERROR 错误编号:%08lx  错误信息:%s\n"), e.Error(), e.ErrorMessage());
+			_tprintf(_T("%s-%d:错误信息:%s 错误代码:%08lx 错误源:%s 错误描述:%s\n"), __FILE__, __LINE__, e.ErrorMessage(), e.Error(), (const TCHAR*)e.Source(), (const TCHAR*)e.Description());
 		}
 		catch (...)
 		{
-
+			_tprintf(_T("%s-%d:出现异常:%08lx\n"), __FILE__, __LINE__, GetLastError());
 		}
 	}
 	if (3 == i)
@@ -290,11 +295,11 @@ bool GetRecordSetWithoutCheck(_ConnectionPtr &conptr, const TCHAR* bSql, _Record
 		}
 		catch (_com_error& e)
 		{
-
+			_tprintf(_T("%s-%d:错误信息:%s 错误代码:%08lx 错误源:%s 错误描述:%s\n"), __FILE__, __LINE__, e.ErrorMessage(), e.Error(), (const TCHAR*)e.Source(), (const TCHAR*)e.Description());
 		}
 		catch (...)
 		{
-
+			_tprintf(_T("%s-%d:出现异常:%08lx\n"), __FILE__, __LINE__, GetLastError());
 		}
 	}
 	return false;

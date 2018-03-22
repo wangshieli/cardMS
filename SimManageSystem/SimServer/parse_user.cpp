@@ -5,7 +5,6 @@
 #include "db_operation.h"
 #include "parse_data.h"
 
-
 void ReturnUserInfo(_RecordsetPtr& pRecord, msgpack::packer<msgpack::sbuffer>& msgPack)
 {
 	VARIANT_BOOL bRt = pRecord->GetadoEOF();
@@ -13,21 +12,16 @@ void ReturnUserInfo(_RecordsetPtr& pRecord, msgpack::packer<msgpack::sbuffer>& m
 	{
 		msgPack.pack_array(4);
 		_variant_t varUsername = pRecord->GetCollect("username");
-		if (varUsername.vt == VT_BSTR)
-		{
-			//const TCHAR* p = _T("wang");
-			msgPack.pack((const TCHAR*)(_bstr_t)varUsername);
-			//msgPack.pack(p);
-		}
+		AddData(varUsername, msgPack);
+
 		_variant_t varPassword = pRecord->GetCollect("password");
-		if (varPassword.vt == VT_BSTR)
-		{
-			msgPack.pack((const TCHAR*)(_bstr_t)varPassword);
-		}
-		int l1 = pRecord->GetCollect("l1");
-		msgPack.pack(l1);
-		int l2 = pRecord->GetCollect("l2");
-		msgPack.pack(l2);
+		AddData(varPassword, msgPack);
+
+		_variant_t varl1 = pRecord->GetCollect("l1");
+		AddData(varl1, msgPack);
+
+		_variant_t varl2 = pRecord->GetCollect("l2");
+		AddData(varl2, msgPack);
 
 		pRecord->MoveNext();
 		bRt = pRecord->GetadoEOF();
