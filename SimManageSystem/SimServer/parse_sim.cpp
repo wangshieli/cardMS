@@ -187,9 +187,51 @@ value(null,'%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%f','%s'
 	}
 	break;
 
-	case 4:// 更新卡信息
+	case DO_UPDATE_DATA:
 	{
+		std::string strOsim = (pObj++)->as<std::string>();
+		std::string strNsim = (pObj++)->as<std::string>();
+		std::string strIccid = (pObj++)->as<std::string>();
+		std::string strDxzh = (pObj++)->as<std::string>();
+		std::string strJhrq = (pObj++)->as<std::string>();
+		std::string strZt = (pObj++)->as<std::string>();
+		std::string strSsdq = (pObj++)->as<std::string>();
+		std::string strLltc = (pObj++)->as<std::string>();
+		std::string strLlc = (pObj++)->as<std::string>();
+		std::string strKh = (pObj++)->as<std::string>();
+		std::string strKhjl = (pObj++)->as<std::string>();
+		std::string strXsrq = (pObj++)->as<std::string>();
+		std::string strDqrq = (pObj++)->as<std::string>();
+		std::string strXfrq = (pObj++)->as<std::string>();
+		std::string strZxrq = (pObj++)->as<std::string>();
+		double dDj = (pObj++)->as<double>();
 
+		msgpack::sbuffer sbuf;
+		msgpack::packer<msgpack::sbuffer> msgPack(&sbuf);
+		sbuf.write("\xfb\xfc", 6);
+		msgPack.pack_array(3);
+		msgPack.pack(B_MSG_SIM_OXBB);
+		msgPack.pack(nSubCmd);
+
+		//jrhm,iccid,dxzh,zt,kh,khjl,llc,dqrq,xsrq,xfrq,jhrq,zxrq,dj,ssdq,lltc
+		const TCHAR* pSql = _T("update sim_tbl set jrhm='%s',iccid='%s',dxzh='%s',zt='%s',kh='%s',khjl='%s',llc='%s',dqrq='%s',xsrq='%s',\
+			xfrq='%s',jhrq='%s',zxrq='%s',dj='%s',ssdq='%s',lltc='%s' where jrhm = '%s'");
+
+		TCHAR strInsert[512];
+		memset(strInsert, 0x00, sizeof(strInsert));
+		_stprintf_s(strInsert, 512, pSql, strNsim.c_str(), strIccid.c_str(), strDxzh.c_str(), strZt.c_str(), strKh.c_str(), strKhjl.c_str(), strLlc.c_str(), strDqrq.c_str(), strXsrq.c_str(), strXfrq.c_str(),
+			strJhrq.c_str(), strZxrq.c_str(), dDj, strSsdq.c_str(), strLltc.c_str(), strOsim.c_str());
+		if (!ExcuteSql(strInsert, true))
+		{
+			msgPack.pack(0);
+			_tprintf(_T("插入失败\n"));
+		}
+		else
+		{
+			msgPack.pack(1);
+		}
+
+		DealLast(sbuf, bobj);
 	}
 	break;
 	default:

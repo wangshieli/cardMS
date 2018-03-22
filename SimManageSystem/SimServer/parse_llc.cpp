@@ -46,8 +46,8 @@ bool doParseLlc(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 	{
 	case DO_INSERT_DATA:
 	{
-		std::string strLx = (pObj++)->as<std::string>();
 		std::string strDm = (pObj++)->as<std::string>();
+		std::string strLx = (pObj++)->as<std::string>();
 		std::string strDxzh = (pObj++)->as<std::string>();
 		std::string strBz = (pObj++)->as<std::string>();
 
@@ -140,6 +140,40 @@ bool doParseLlc(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 		msgPack.pack(1);
 
 		ReturnLlcInfo(pRecord, msgPack);
+		DealLast(sbuf, bobj);
+	}
+	break;
+
+	case DO_UPDATE_DATA:
+	{
+		std::string strOdm = (pObj++)->as<std::string>();
+		std::string strNdm = (pObj++)->as<std::string>();
+		std::string strLx = (pObj++)->as<std::string>();
+		std::string strDxzh = (pObj++)->as<std::string>();
+		std::string strBz = (pObj++)->as<std::string>();
+
+		msgpack::sbuffer sbuf;
+		msgpack::packer<msgpack::sbuffer> msgPack(&sbuf);
+		sbuf.write("\xfb\xfc", 6);
+		msgPack.pack_array(3);
+		msgPack.pack(B_MSG_LLC_0X9B);
+		msgPack.pack(nSubCmd);
+
+		const TCHAR* pSql = _T("update llc_tbl set dm = '%s', lx = '%s',dxzh= '%s',bz='%s',xgrq=now() where dm = '%s'");
+
+		TCHAR strInsert[512];
+		memset(strInsert, 0x00, sizeof(strInsert));
+		_stprintf_s(strInsert, 512, pSql, strNdm.c_str(), strLx.c_str(), strDxzh.c_str(), strBz.c_str(), strOdm.c_str());
+		if (!ExcuteSql(strInsert, true))
+		{
+			msgPack.pack(0);
+			_tprintf(_T("≤Â»Î ß∞‹\n"));
+		}
+		else
+		{
+			msgPack.pack(1);
+		}
+
 		DealLast(sbuf, bobj);
 	}
 	break;

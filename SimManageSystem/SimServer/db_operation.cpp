@@ -253,7 +253,8 @@ bool ExcuteWithoutCheck(_ConnectionPtr& conptr, const TCHAR* bSql)
 		}
 		catch (_com_error& e)
 		{
-
+			_tprintf(_T("DB_COM_ERROR ´íÎó±àºÅ:%08lx  ´íÎóÐÅÏ¢:%s ´íÎóÔ´:%s ´íÎóÃèÊö:%s\n"), e.Error(), e.ErrorMessage(), (const TCHAR*)e.Source(), (const TCHAR*)e.Description());
+		//	_tprintf(_T("DB_COM_ERROR ´íÎó±àºÅ:%08lx  ´íÎóÐÅÏ¢:%s\n"), e.Error(), e.ErrorMessage());
 		}
 		catch (...)
 		{

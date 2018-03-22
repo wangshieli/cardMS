@@ -154,9 +154,7 @@ bool doParseUser(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 	case DO_UPDATE_DATA:
 	{
 		std::string strUsername = (pObj++)->as<std::string>();
-		_tprintf(_T("p = %s\n"), strUsername.c_str());
 		std::string strPassword = (pObj++)->as<std::string>();
-		_tprintf(_T("p1 = %s\n"), strPassword.c_str());
 		int l1 = (pObj++)->as<int>();
 		int l2 = (pObj++)->as<int>();
 

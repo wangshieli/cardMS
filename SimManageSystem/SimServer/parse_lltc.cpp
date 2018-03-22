@@ -132,6 +132,39 @@ bool doParseLltc(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 		DealLast(sbuf, bobj);
 	}
 	break;
+
+	case DO_UPDATE_DATA:
+	{
+		std::string strOtcmc = (pObj++)->as<std::string>();
+		std::string strNtcmc = (pObj++)->as<std::string>();
+		std::string strTcfl = (pObj++)->as<std::string>();
+
+		msgpack::sbuffer sbuf;
+		msgpack::packer<msgpack::sbuffer> msgPack(&sbuf);
+		sbuf.write("\xfb\xfc", 6);
+		msgPack.pack_array(3);
+		msgPack.pack(B_MSG_LLTC_0X8B);
+		msgPack.pack(nSubCmd);
+
+		//tcfl,tcmc
+		const TCHAR* pSql = _T("update lltc_tbl set tcmc = '%s',tcfl= '%s' where tcmc = '%s'");
+
+		TCHAR strInsert[512];
+		memset(strInsert, 0x00, sizeof(strInsert));
+		_stprintf_s(strInsert, 512, pSql, strNtcmc.c_str(), strTcfl.c_str(), strOtcmc.c_str());
+		if (!ExcuteSql(strInsert, true))
+		{
+			msgPack.pack(0);
+			_tprintf(_T("≤Â»Î ß∞‹\n"));
+		}
+		else
+		{
+			msgPack.pack(1);
+		}
+
+		DealLast(sbuf, bobj);
+	}
+	break;
 	default:
 		break;
 	}

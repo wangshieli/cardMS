@@ -67,7 +67,7 @@ bool doParseKh(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 		msgpack::packer<msgpack::sbuffer> msgPack(&sbuf);
 		sbuf.write("\xfb\xfc", 6);
 		msgPack.pack_array(3);
-		msgPack.pack(B_MSG_KHJL_OXEB);
+		msgPack.pack(B_MSG_KH_OXCB);
 		msgPack.pack(nSubCmd);
 
 		const TCHAR* pSql = _T("insert into kh_tbl (id,khmc,lxfs,khjl,user,khdm,gf,bz,xgrq) value(null,'%s','%s','%s','%s','%s','%s','%s',now())");
@@ -110,7 +110,7 @@ bool doParseKh(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 		msgpack::packer<msgpack::sbuffer> msgPack(&sbuf);
 		sbuf.write("\xfb\xfc", 6);
 		msgPack.pack_array(3 + lRstCount);
-		msgPack.pack(B_MSG_KHJL_OXEB);
+		msgPack.pack(B_MSG_KH_OXCB);
 		msgPack.pack(nSubCmd);
 		msgPack.pack(1);
 
@@ -147,11 +147,48 @@ bool doParseKh(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 		msgpack::packer<msgpack::sbuffer> msgPack(&sbuf);
 		sbuf.write("\xfb\xfc", 6);
 		msgPack.pack_array(3 + lRstCount);
-		msgPack.pack(B_MSG_KHJL_OXEB);
+		msgPack.pack(B_MSG_KH_OXCB);
 		msgPack.pack(nSubCmd);
 		msgPack.pack(1);
 
 		ReturnKhInfo(pRecord, msgPack);
+		DealLast(sbuf, bobj);
+	}
+	break;
+
+	case DO_UPDATE_DATA:
+	{
+		std::string strOkhmc = (pObj++)->as<std::string>();
+		std::string strNkhmc = (pObj++)->as<std::string>();
+		std::string strLxfs = (pObj++)->as<std::string>();
+		std::string strKhjl = (pObj++)->as<std::string>();
+		std::string strUser = (pObj++)->as<std::string>();
+		std::string strKhdm = (pObj++)->as<std::string>();
+		std::string strGf = (pObj++)->as<std::string>();
+		std::string strBz = (pObj++)->as<std::string>();
+
+		msgpack::sbuffer sbuf;
+		msgpack::packer<msgpack::sbuffer> msgPack(&sbuf);
+		sbuf.write("\xfb\xfc", 6);
+		msgPack.pack_array(3);
+		msgPack.pack(B_MSG_KH_OXCB);
+		msgPack.pack(nSubCmd);
+		
+		const TCHAR* pSql =  _T("update kh_tbl set khmc = '%s', lxfs= '%s',khjl= '%s',user= '%s',khdm= '%s',gf= '%s',bz='%s',xgrq=now() where khmc = '%s'");
+
+		TCHAR strInsert[512];
+		memset(strInsert, 0x00, sizeof(strInsert));
+		_stprintf_s(strInsert, 512, pSql, strNkhmc.c_str(), strLxfs.c_str(), strKhjl.c_str(), strUser.c_str(), strKhdm.c_str(), strGf.c_str(), strBz.c_str(), strOkhmc.c_str());
+		if (!ExcuteSql(strInsert, true))
+		{
+			msgPack.pack(0);
+			_tprintf(_T("≤Â»Î ß∞‹\n"));
+		}
+		else
+		{
+			msgPack.pack(1);
+		}
+
 		DealLast(sbuf, bobj);
 	}
 	break;

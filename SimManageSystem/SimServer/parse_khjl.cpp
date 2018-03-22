@@ -148,6 +148,41 @@ bool doParseKhjl(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 		DealLast(sbuf, bobj);
 	}
 	break;
+
+	case DO_UPDATE_DATA:
+	{
+		std::string strOxm = (pObj++)->as<std::string>();
+		std::string strNxm = (pObj++)->as<std::string>();
+		std::string strLxfs = (pObj++)->as<std::string>();
+		std::string strUser = (pObj++)->as<std::string>();
+		std::string strGf = (pObj++)->as<std::string>();
+		std::string strBz = (pObj++)->as<std::string>();
+
+		msgpack::sbuffer sbuf;
+		msgpack::packer<msgpack::sbuffer> msgPack(&sbuf);
+		sbuf.write("\xfb\xfc", 6);
+		msgPack.pack_array(3);
+		msgPack.pack(B_MSG_KHJL_OXEB);
+		msgPack.pack(nSubCmd);
+
+		const TCHAR* pSql = _T("update khjl_tbl set xm = '%s', lxfs= '%s',user= '%s',gf= '%s',bz='%s',xgrq=now() where xm = '%s'");
+
+		TCHAR strInsert[512];
+		memset(strInsert, 0x00, sizeof(strInsert));
+		_stprintf_s(strInsert, 512, pSql, strNxm.c_str(), strLxfs.c_str(), strUser.c_str(), strGf.c_str(), strBz.c_str(), strOxm.c_str());
+		if (!ExcuteSql(strInsert, true))
+		{
+			msgPack.pack(0);
+			_tprintf(_T("≤Â»Î ß∞‹\n"));
+		}
+		else
+		{
+			msgPack.pack(1);
+		}
+
+		DealLast(sbuf, bobj);
+	}
+	break;
 	default:
 		break;
 	}
