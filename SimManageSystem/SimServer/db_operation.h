@@ -20,3 +20,5 @@ bool GetRecordSet(const TCHAR* bSql, _RecordsetPtr& pRecord, long lOption /*= ad
 
 // สอทลืสิด
 void ReleaseDBPool();
+
+void ReleaseRecordset(_RecordsetPtr& pRecord);

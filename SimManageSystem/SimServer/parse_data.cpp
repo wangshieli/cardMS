@@ -139,3 +139,42 @@ void AddData(const _variant_t& var, msgpack::packer<msgpack::sbuffer>& msgPack)
 		break;
 	}
 }
+
+void ReturnSimpleInfo(msgpack::packer<msgpack::sbuffer>& msgPack, int nCmd, int nSubCmd, int nSuccess, const TCHAR* pErrInfo)
+{
+	msgPack.pack_array(4);
+	msgPack.pack(nCmd);
+	msgPack.pack(nSubCmd);
+	msgPack.pack(nSuccess);
+	msgPack.pack(pErrInfo);
+}
+
+bool GetRecordSetDate(const TCHAR* sql, _RecordsetPtr& pRecord, int nCmd, int nSubCmd, msgpack::packer<msgpack::sbuffer>& msgPack)
+{
+	if (!GetRecordSet(sql, pRecord, adCmdText, true))
+	{
+		ReturnSimpleInfo(msgPack, B_MSG_SIM_0XBB, nSubCmd, 0, _T("查询失败,数据库异常_set"));
+		ReleaseRecordset(pRecord);
+		return false;
+	}
+	if (pRecord->adoEOF)
+	{
+		ReturnSimpleInfo(msgPack, B_MSG_SIM_0XBB, nSubCmd, 0, _T("查询失败,数据库异常_set"));
+		ReleaseRecordset(pRecord);
+		return false;
+	}
+
+	return true;
+}
+
+void CheckSqlResult(const TCHAR* sql, int nCmd, int nSubCmd, msgpack::packer<msgpack::sbuffer>& msgPack)
+{
+	if (!ExcuteSql(sql, true))
+	{
+		ReturnSimpleInfo(msgPack, nCmd, nSubCmd, 0, _T("失败"));
+	}
+	else
+	{
+		ReturnSimpleInfo(msgPack, nCmd, nSubCmd, 1, _T("成功"));
+	}
+}

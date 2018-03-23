@@ -13,6 +13,7 @@
 #include "parse_khjl.h"
 #include "parse_llc.h"
 #include "parse_lltc.h"
+#include "parse_ssdq.h"
 
 void ErrorInfo(BUFFER_OBJ* bobj, const TCHAR* pErrorInfo)
 {
@@ -35,34 +36,29 @@ bool doParseData(BUFFER_OBJ* bobj)
 	int nLen = bobj->dwRecvedCount;
 	if (nLen < 8)
 	{
-		_tprintf(_T("数据太短了\n"));
 		ErrorInfo(bobj, _T("数据太短了\n"));
 		return false;
 	}
 	if ((UCHAR)pRequest[0] != 0xfb || (UCHAR)pRequest[1] != 0xfc)//  没有数据开始标志
 	{
-		_tprintf(_T("没有数据开始标志\n"));
 		ErrorInfo(bobj, _T("没有数据开始标志\n"));
 		return false;
 	}
 	int nFrameLen = *(INT*)(pRequest + 2);
 	if (nLen < (nFrameLen + 8))
 	{
-		_tprintf(_T("长度不够\n"));
 		ErrorInfo(bobj, _T("长度不够\n"));
 		return false;
 	}
 	byte nSum = pRequest[6 + nFrameLen];// 检验和
 	if (nSum != csum((unsigned char*)pRequest + 6, nFrameLen))
 	{
-		_tprintf(_T("检验和失败\n"));
 		ErrorInfo(bobj, _T("检验和失败\n"));
 		return false;
 	}
 
 	if (0x0d != pRequest[nFrameLen + 7])
 	{
-		_tprintf(_T("结尾错误\n"));
 		ErrorInfo(bobj, _T("结尾错误\n"));
 		return false;
 	}
@@ -77,7 +73,6 @@ bool doParseData(BUFFER_OBJ* bobj)
 		unpack_.next(result_);
 		if (msgpack::type::ARRAY != result_.get().type)
 		{
-			_tprintf(_T("数据不完整\n"));
 			ErrorInfo(bobj, _T("数据不完整\n"));
 			return false;
 		}
@@ -86,36 +81,38 @@ bool doParseData(BUFFER_OBJ* bobj)
 		{
 			return doParseUser(result_, bobj);
 		}
-		else if (cmdno == MSG_SIM_OX0B)
+		else if (cmdno == MSG_SIM_0X0B)
 		{
 			return doParseSim(result_, bobj);
 		}
-		else if (cmdno == MSG_KH_OX0C)
+		else if (cmdno == MSG_KH_0X0C)
 		{
 			return doParseKh(result_, bobj);
 		}
-		else if (cmdno == MSG_KHJL_OX0E)
+		else if (cmdno == MSG_KHJL_0X0E)
 		{
 			return doParseKhjl(result_, bobj);
 		}
-		else if (cmdno == MSG_LLC_OX09)
+		else if (cmdno == MSG_LLC_0X09)
 		{
 			return doParseLlc(result_, bobj);
 		}
-		else if (cmdno == MSG_LLTC_OX08)
+		else if (cmdno == MSG_LLTC_0X08)
 		{
 			return doParseLltc(result_, bobj);
 		}
+		else if (cmdno == MSG_SSDQ_0X07)
+		{
+			return doParseSsdq(result_, bobj);
+		}
 		else
 		{
-			_tprintf(_T("未知命令\n"));
 			ErrorInfo(bobj, _T("未知命令\n"));
 			return false;
 		}
 	}
 	catch (msgpack::type_error e)
 	{
-		_tprintf(_T("数据类型错误\n"));
 		ErrorInfo(bobj, _T("数据类型错误\n"));
 		return false;
 	}
@@ -127,7 +124,6 @@ bool doParseData(BUFFER_OBJ* bobj)
 	}
 	catch (...)
 	{
-		_tprintf(_T("解析出错\n"));
 		ErrorInfo(bobj, _T("解析出错\n"));
 		return false;
 	}

@@ -31,7 +31,7 @@ bool doParseLltc(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 	msgpack::object* pObj = result_.get().via.array.ptr;
 	pObj++;
 	int nSubCmd = (pObj++)->as<int>();
-	_tprintf(_T("nSubCmd %d\n"), nSubCmd);
+	int nCmd = B_MSG_LLTC_0X8B;
 
 	switch (nSubCmd)
 	{
@@ -43,24 +43,12 @@ bool doParseLltc(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 		msgpack::sbuffer sbuf;
 		msgpack::packer<msgpack::sbuffer> msgPack(&sbuf);
 		sbuf.write("\xfb\xfc", 6);
-		msgPack.pack_array(3);
-		msgPack.pack(B_MSG_LLTC_0X8B);
-		msgPack.pack(nSubCmd);
 
 		const TCHAR* pSql = _T("insert into lltc_tbl (id,tcfl,tcmc) value(null,'%s','%s')");
-
-		TCHAR strInsert[512];
-		memset(strInsert, 0x00, sizeof(strInsert));
-		_stprintf_s(strInsert, 512, pSql, strTcfl.c_str(), strTcmc.c_str());
-		if (!ExcuteSql(strInsert, true))
-		{
-			msgPack.pack(0);
-			_tprintf(_T("插入失败\n"));
-		}
-		else
-		{
-			msgPack.pack(1);
-		}
+		TCHAR sql[512];
+		memset(sql, 0x00, sizeof(sql));
+		_stprintf_s(sql, 512, pSql, strTcfl.c_str(), strTcmc.c_str());
+		CheckSqlResult(sql, nCmd, nSubCmd, msgPack);
 
 		DealLast(sbuf, bobj);
 	}
@@ -69,30 +57,31 @@ bool doParseLltc(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 	case DO_SELECT_BY_KEY:
 	{
 		std::string strTcmc = (pObj++)->as<std::string>();
-		_tprintf(_T("p = %s\n"), strTcmc.c_str());
-		const TCHAR* pSql = _T("select * from lltc_tbl where tcmc = '%s'");
-		TCHAR sql[256];
-		memset(sql, 0x00, 256);
-		_stprintf_s(sql, 256, pSql, strTcmc.c_str());
-		_RecordsetPtr pRecord;
-		if (!GetRecordSet(sql, pRecord, adCmdText, true))
-			return false;
-		if (pRecord->adoEOF)
-		{
-			_tprintf(_T("没有找到数据"));
-		}
-		int lRstCount = pRecord->GetRecordCount();
 
 		msgpack::sbuffer sbuf;
 		msgpack::packer<msgpack::sbuffer> msgPack(&sbuf);
 		sbuf.write("\xfb\xfc", 6);
-		msgPack.pack_array(3 + lRstCount);
-		msgPack.pack(B_MSG_LLTC_0X8B);
+		_RecordsetPtr pRecord;
+
+		const TCHAR* pSql = _T("select * from lltc_tbl where tcmc = '%s'");
+		TCHAR sql[256];
+		memset(sql, 0x00, 256);
+		_stprintf_s(sql, 256, pSql, strTcmc.c_str());
+		
+		if (!GetRecordSetDate(sql, pRecord, nCmd, nSubCmd, msgPack))
+		{
+			DealLast(sbuf, bobj);
+			return false;
+		}
+	
+		int lRstCount = pRecord->GetRecordCount();
+		msgPack.pack_array(4 + lRstCount);
+		msgPack.pack(nCmd);
 		msgPack.pack(nSubCmd);
 		msgPack.pack(1);
+		msgPack.pack(_T("成功"));
 
 		ReturnLltcInfo(pRecord, msgPack);
-
 		DealLast(sbuf, bobj);
 	}
 	break;
@@ -100,33 +89,30 @@ bool doParseLltc(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 	case DO_SELECT_BY_ID:
 	{
 		int nTag = (pObj++)->as<int>();
-		_tprintf(_T("ntag = %d\n"), nTag);
-
 		int nStart = 200 * (nTag - 1) + 1;
 		int nEnd = 200 * nTag;
-
-		const TCHAR* pSql = _T("select * from lltc_tbl where id  between %d and %d");// 主键范围
-		TCHAR sql[256];
-		memset(sql, 0x00, 256);
-		_stprintf_s(sql, 256, pSql, nStart, nEnd);
-		_RecordsetPtr pRecord;
-		if (!GetRecordSet(sql, pRecord, adCmdText, true))
-			return false;
-		if (pRecord->adoEOF)
-		{
-			_tprintf(_T("没有找到数据"));
-		}
-
-		long lRstCount = pRecord->GetRecordCount();
-		_tprintf(_T("查询到的数据条数:%ld\n"), lRstCount);
 
 		msgpack::sbuffer sbuf;
 		msgpack::packer<msgpack::sbuffer> msgPack(&sbuf);
 		sbuf.write("\xfb\xfc", 6);
-		msgPack.pack_array(3 + lRstCount);
-		msgPack.pack(B_MSG_LLTC_0X8B);
+		_RecordsetPtr pRecord;
+
+		const TCHAR* pSql = _T("select * from lltc_tbl where id  between %d and %d");// 主键范围
+		TCHAR sql[256];
+		memset(sql, 0x00, 256);
+		_stprintf_s(sql, 256, pSql, nStart, nEnd);	
+		if (!GetRecordSetDate(sql, pRecord, nCmd, nSubCmd, msgPack))
+		{
+			DealLast(sbuf, bobj);
+			return false;
+		}
+
+		long lRstCount = pRecord->GetRecordCount();
+		msgPack.pack_array(4 + lRstCount);
+		msgPack.pack(nCmd);
 		msgPack.pack(nSubCmd);
 		msgPack.pack(1);
+		msgPack.pack(_T("成功"));
 
 		ReturnLltcInfo(pRecord, msgPack);
 		DealLast(sbuf, bobj);
@@ -142,25 +128,12 @@ bool doParseLltc(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 		msgpack::sbuffer sbuf;
 		msgpack::packer<msgpack::sbuffer> msgPack(&sbuf);
 		sbuf.write("\xfb\xfc", 6);
-		msgPack.pack_array(3);
-		msgPack.pack(B_MSG_LLTC_0X8B);
-		msgPack.pack(nSubCmd);
 
-		//tcfl,tcmc
 		const TCHAR* pSql = _T("update lltc_tbl set tcmc = '%s',tcfl= '%s' where tcmc = '%s'");
-
-		TCHAR strInsert[512];
-		memset(strInsert, 0x00, sizeof(strInsert));
-		_stprintf_s(strInsert, 512, pSql, strNtcmc.c_str(), strTcfl.c_str(), strOtcmc.c_str());
-		if (!ExcuteSql(strInsert, true))
-		{
-			msgPack.pack(0);
-			_tprintf(_T("插入失败\n"));
-		}
-		else
-		{
-			msgPack.pack(1);
-		}
+		TCHAR sql[512];
+		memset(sql, 0x00, sizeof(sql));
+		_stprintf_s(sql, 512, pSql, strNtcmc.c_str(), strTcfl.c_str(), strOtcmc.c_str());
+		CheckSqlResult(sql, nCmd, nSubCmd, msgPack);
 
 		DealLast(sbuf, bobj);
 	}

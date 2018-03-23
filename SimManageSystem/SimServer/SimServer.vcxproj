@@ -158,6 +158,7 @@
     <ClInclude Include="parse_lltc.h" />
     <ClInclude Include="parse_request.h" />
     <ClInclude Include="parse_sim.h" />
+    <ClInclude Include="parse_ssdq.h" />
     <ClInclude Include="parse_user.h" />
     <ClInclude Include="post_request.h" />
     <ClInclude Include="singleton_data.h" />
@@ -175,6 +176,7 @@
     <ClCompile Include="parse_lltc.cpp" />
     <ClCompile Include="parse_request.cpp" />
     <ClCompile Include="parse_sim.cpp" />
+    <ClCompile Include="parse_ssdq.cpp" />
     <ClCompile Include="parse_user.cpp" />
     <ClCompile Include="post_request.cpp" />
     <ClCompile Include="SimServer.cpp" />

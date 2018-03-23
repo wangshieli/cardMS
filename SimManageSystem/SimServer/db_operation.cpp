@@ -157,7 +157,6 @@ unsigned int _stdcall tfunc_dblink(LPVOID pVoid)
 				v_DBLinkVector.push_back(conptr);
 				LeaveCriticalSection(&cs_DBLinkVector);
 				SetEvent(hEmptyEvent);
-				_tprintf(_T("数据库连接回收\n"));
 			}
 			break;
 
@@ -178,7 +177,6 @@ bool CreateDBConnection(_ConnectionPtr& conptr)
 		TCHAR strConn[256];
 		memset(strConn, 0x00, sizeof(strConn));
 		_stprintf_s(strConn, 256, _T("DATABASE=%s;DSN=%s;OPTION=0;PWD=%s;PORT=0;SERVER=localhost;UID=%s"), DB_NAME, DB_DSN, DB_PWD, DB_USER);
-		_tprintf(_T("连接字符串:%s\n"), strConn);
 		HRESULT hr = conptr->Open(_bstr_t(strConn), "", "", adModeUnknown);
 		if (FAILED(hr))
 			return false;
@@ -254,7 +252,9 @@ bool ExcuteWithoutCheck(_ConnectionPtr& conptr, const TCHAR* bSql)
 			VARIANT nRecordAffected = { 0 };
 			conptr->Execute(_bstr_t(bSql), &nRecordAffected, adCmdText);
 			if (nRecordAffected.date < 0)
+			//if (nRecordAffected.lVal <= 0)
 				return false;
+			
 			break;
 		}
 		catch (_com_error& e)
@@ -303,4 +303,17 @@ bool GetRecordSetWithoutCheck(_ConnectionPtr &conptr, const TCHAR* bSql, _Record
 		}
 	}
 	return false;
+}
+
+void ReleaseRecordset(_RecordsetPtr& pRecord)
+{
+	if ((BOOL)pRecord == TRUE)
+	{
+		if (pRecord->State == adStateOpen)
+		{
+			pRecord->Close();
+			pRecord.Release();
+			pRecord = NULL;
+		}
+	}
 }

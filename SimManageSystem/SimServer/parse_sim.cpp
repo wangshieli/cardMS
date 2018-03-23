@@ -60,9 +60,7 @@ void ReturnSimInfo(_RecordsetPtr& pRecord, msgpack::packer<msgpack::sbuffer>& ms
 		bRt = pRecord->GetadoEOF();
 	}
 
-	pRecord->Close();
-	pRecord.Release();
-	pRecord = NULL;
+	ReleaseRecordset(pRecord);
 }
 
 bool doParseSim(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
@@ -70,16 +68,14 @@ bool doParseSim(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 	msgpack::object* pObj = result_.get().via.array.ptr;
 	pObj++;
 	int nSubCmd = (pObj++)->as<int>();
-	_tprintf(_T("nSubCmd %d\n"), nSubCmd);
+	int nCmd = B_MSG_SIM_0XBB;
 
 	switch (nSubCmd)
 	{
 	case DO_INSERT_DATA:
 	{
 		std::string strSim = (pObj++)->as<std::string>();
-		_tprintf(_T("p = %s\n"), strSim.c_str());
 		std::string strIccid = (pObj++)->as<std::string>();
-		_tprintf(_T("p1 = %s\n"), strIccid.c_str());
 		std::string strDxzh = (pObj++)->as<std::string>();
 		std::string strJhrq = (pObj++)->as<std::string>();
 		std::string strZt = (pObj++)->as<std::string>();
@@ -97,26 +93,14 @@ bool doParseSim(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 		msgpack::sbuffer sbuf;
 		msgpack::packer<msgpack::sbuffer> msgPack(&sbuf);
 		sbuf.write("\xfb\xfc", 6);
-		msgPack.pack_array(3);
-		msgPack.pack(B_MSG_SIM_OXBB);
-		msgPack.pack(nSubCmd);
 
 		const TCHAR* pSql = _T("insert into sim_tbl (id,jrhm,iccid,dxzh,zt,kh,khjl,llc,dqrq,xsrq,xfrq,jhrq,zxrq,dj,ssdq,lltc) \
 value(null,'%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%f','%s','%s')");
-
-		TCHAR strInsert[512];
-		memset(strInsert, 0x00, sizeof(strInsert));
-		_stprintf_s(strInsert, 512, pSql, strSim.c_str(), strIccid.c_str(), strDxzh.c_str(), strZt.c_str(), strKh.c_str(), strKhjl.c_str(), strLlc.c_str(), strDqrq.c_str(), strXsrq.c_str(), strXfrq.c_str(),
+		TCHAR sql[512];
+		memset(sql, 0x00, sizeof(sql));
+		_stprintf_s(sql, 512, pSql, strSim.c_str(), strIccid.c_str(), strDxzh.c_str(), strZt.c_str(), strKh.c_str(), strKhjl.c_str(), strLlc.c_str(), strDqrq.c_str(), strXsrq.c_str(), strXfrq.c_str(),
 			strJhrq.c_str(), strZxrq.c_str(), dDj, strSsdq.c_str(), strLltc.c_str());
-		if (!ExcuteSql(strInsert, true))
-		{
-			msgPack.pack(0);
-			_tprintf(_T("插入失败\n"));
-		}
-		else
-		{
-			msgPack.pack(1);
-		}
+		CheckSqlResult(sql, nCmd, nSubCmd, msgPack);
 
 		DealLast(sbuf, bobj);
 	}
@@ -124,63 +108,60 @@ value(null,'%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%f','%s'
 	case DO_SELECT_BY_KEY:// 使用接入号码查sim
 	{
 		std::string strSim = (pObj++)->as<std::string>();
-		_tprintf(_T("p = %s\n"), strSim.c_str());
-		const TCHAR* pSql = _T("select * from sim_tbl where jrhm = '%s'");
-		TCHAR sql[256];
-		memset(sql, 0x00, 256);
-		_stprintf_s(sql, 256, pSql, strSim.c_str());
-		_RecordsetPtr pRecord;
-		if (!GetRecordSet(sql, pRecord, adCmdText, true))
-			return false;
-		if (pRecord->adoEOF)
-		{
-			_tprintf(_T("没有找到数据"));
-		}
-		int lRstCount = pRecord->GetRecordCount();
 
 		msgpack::sbuffer sbuf;
 		msgpack::packer<msgpack::sbuffer> msgPack(&sbuf);
 		sbuf.write("\xfb\xfc", 6);
-		msgPack.pack_array(3 + lRstCount);
-		msgPack.pack(B_MSG_SIM_OXBB);
+		_RecordsetPtr pRecord;
+
+		const TCHAR* pSql = _T("select * from sim_tbl where jrhm = '%s'");
+		TCHAR sql[256];
+		memset(sql, 0x00, 256);
+		_stprintf_s(sql, 256, pSql, strSim.c_str());
+		if (!GetRecordSetDate(sql, pRecord, nCmd, nSubCmd, msgPack))
+		{
+			DealLast(sbuf, bobj);
+			return false;
+		}
+
+		int lRstCount = pRecord->GetRecordCount();
+		msgPack.pack_array(4 + lRstCount);
+		msgPack.pack(nCmd);
 		msgPack.pack(nSubCmd);
 		msgPack.pack(1);
+		msgPack.pack(_T("成功"));
 
 		ReturnSimInfo(pRecord, msgPack);
-
 		DealLast(sbuf, bobj);
 	}
 	break;
 	case DO_SELECT_BY_ID:// 根据tag返回一定数量的卡信息
 	{
 		int nTag = (pObj++)->as<int>();
-		_tprintf(_T("ntag = %d\n"), nTag);
-
 		int nStart = 200 * (nTag - 1) + 1;
 		int nEnd = 200 * nTag;
+
+		msgpack::sbuffer sbuf;
+		msgpack::packer<msgpack::sbuffer> msgPack(&sbuf);
+		sbuf.write("\xfb\xfc", 6);
+		_RecordsetPtr pRecord;
 
 		const TCHAR* pSql = _T("select * from sim_tbl where id  between %d and %d");// 主键范围
 		TCHAR sql[256];
 		memset(sql, 0x00, 256);
 		_stprintf_s(sql, 256, pSql, nStart, nEnd);
-		_RecordsetPtr pRecord;
-		if (!GetRecordSet(sql, pRecord, adCmdText, true))
-			return false;
-		if (pRecord->adoEOF)
+		if (!GetRecordSetDate(sql, pRecord, nCmd, nSubCmd, msgPack))
 		{
-			_tprintf(_T("没有找到数据"));
+			DealLast(sbuf, bobj);
+			return false;
 		}
 
 		long lRstCount = pRecord->GetRecordCount();
-		_tprintf(_T("查询到的数据条数:%ld\n"), lRstCount);
-
-		msgpack::sbuffer sbuf;
-		msgpack::packer<msgpack::sbuffer> msgPack(&sbuf);
-		sbuf.write("\xfb\xfc", 6);
-		msgPack.pack_array(3 + lRstCount);
-		msgPack.pack(B_MSG_SIM_OXBB);
+		msgPack.pack_array(4 + lRstCount);
+		msgPack.pack(nCmd);
 		msgPack.pack(nSubCmd);
 		msgPack.pack(1);
+		msgPack.pack(_T("成功"));
 
 		ReturnSimInfo(pRecord, msgPack);
 		DealLast(sbuf, bobj);
@@ -209,28 +190,48 @@ value(null,'%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%f','%s'
 		msgpack::sbuffer sbuf;
 		msgpack::packer<msgpack::sbuffer> msgPack(&sbuf);
 		sbuf.write("\xfb\xfc", 6);
-		msgPack.pack_array(3);
-		msgPack.pack(B_MSG_SIM_OXBB);
-		msgPack.pack(nSubCmd);
 
-		//jrhm,iccid,dxzh,zt,kh,khjl,llc,dqrq,xsrq,xfrq,jhrq,zxrq,dj,ssdq,lltc
 		const TCHAR* pSql = _T("update sim_tbl set jrhm='%s',iccid='%s',dxzh='%s',zt='%s',kh='%s',khjl='%s',llc='%s',dqrq='%s',xsrq='%s',\
 			xfrq='%s',jhrq='%s',zxrq='%s',dj='%s',ssdq='%s',lltc='%s' where jrhm = '%s'");
-
-		TCHAR strInsert[512];
-		memset(strInsert, 0x00, sizeof(strInsert));
-		_stprintf_s(strInsert, 512, pSql, strNsim.c_str(), strIccid.c_str(), strDxzh.c_str(), strZt.c_str(), strKh.c_str(), strKhjl.c_str(), strLlc.c_str(), strDqrq.c_str(), strXsrq.c_str(), strXfrq.c_str(),
+		TCHAR sql[512];
+		memset(sql, 0x00, sizeof(sql));
+		_stprintf_s(sql, 512, pSql, strNsim.c_str(), strIccid.c_str(), strDxzh.c_str(), strZt.c_str(), strKh.c_str(), strKhjl.c_str(), strLlc.c_str(), strDqrq.c_str(), strXsrq.c_str(), strXfrq.c_str(),
 			strJhrq.c_str(), strZxrq.c_str(), dDj, strSsdq.c_str(), strLltc.c_str(), strOsim.c_str());
-		if (!ExcuteSql(strInsert, true))
+		CheckSqlResult(sql, nCmd, nSubCmd, msgPack);
+
+		DealLast(sbuf, bobj);
+	}
+	break;
+
+	case DO_SELECT_BY_USER:
+	{
+		int nTag = (pObj++)->as<int>();
+		std::string strUser = (pObj++)->as<std::string>();
+		int nStart = 200 * (nTag - 1) + 1;
+		int nEnd = 200 * nTag;
+
+		msgpack::sbuffer sbuf;
+		msgpack::packer<msgpack::sbuffer> msgPack(&sbuf);
+		sbuf.write("\xfb\xfc", 6);
+		_RecordsetPtr pRecord;
+
+		const TCHAR* pSql = _T("select * from sim_tbl where user = '%s' and id between %d and %d");
+		TCHAR sql[256];
+		memset(sql, 0x00, sizeof(sql));
+		if (!GetRecordSetDate(sql, pRecord, nCmd, nSubCmd, msgPack))
 		{
-			msgPack.pack(0);
-			_tprintf(_T("插入失败\n"));
-		}
-		else
-		{
-			msgPack.pack(1);
+			DealLast(sbuf, bobj);
+			return false;
 		}
 
+		long lRstCount = pRecord->GetRecordCount();
+		msgPack.pack_array(4 + lRstCount);
+		msgPack.pack(nCmd);
+		msgPack.pack(nSubCmd);
+		msgPack.pack(1);
+		msgPack.pack(_T("成功"));
+
+		ReturnSimInfo(pRecord, msgPack);
 		DealLast(sbuf, bobj);
 	}
 	break;

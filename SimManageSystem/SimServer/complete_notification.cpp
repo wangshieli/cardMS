@@ -93,31 +93,6 @@ void AcceptCompSuccess(DWORD dwTranstion, void* _lobj, void* _c_bobj)
 	else
 	{
 		doParseData(c_bobj);
-		// 处理命令
-		//printf("%d\n", c_bobj->dwRecvedCount);
-		//_tprintf(_T("接收到的数据: %s\n"), c_bobj->data);
-		//msgpack::sbuffer sbuf(c_bobj->dwRecvedCount);
-		//memcpy_s(sbuf.data(), c_bobj->dwRecvedCount, c_bobj->data, c_bobj->dwRecvedCount);
-		//msgpack::object_handle oh =
-		//	msgpack::unpack(c_bobj->data, c_bobj->dwRecvedCount);
-
-		//// print the deserialized object.
-		//msgpack::object obj = oh.get();
-		//std::cout << obj << std::endl;
-
-		// 解析收到的数据
-		//doParseData(c_bobj->data);
-		//// 判断操作类型
-		//doParse(1);
-		//// 进行业务处理
-
-		//_stprintf_s(c_bobj->data, c_bobj->datalen, _T("已经收到信息，正在进行处理"));
-		//c_bobj->dwRecvedCount = _tcslen(c_bobj->data) + 1;
-		//c_bobj->SetIoRequestFunction(SendCompFailed, SendCompSuccess);
-		//if (!PostSend(c_sobj, c_bobj))
-		//{
-		//	goto error;
-		//}
 	}
 
 	return;
@@ -173,7 +148,8 @@ void RecvCompSuccess(DWORD dwTransion, void* _sobj, void* _bobj)
 	BUFFER_OBJ* c_bobj = (BUFFER_OBJ*)_bobj;
 
 	c_bobj->dwRecvedCount += dwTransion;
-	if (NULL == strstr(c_bobj->data, "\r\n\r\n"))
+	//if (NULL == strstr(c_bobj->data, "\r\n\r\n"))
+	if (NULL == memchr(c_bobj->data + c_bobj->dwRecvedCount - 1, 0x0d, 1))
 	{
 		c_bobj->SetIoRequestFunction(RecvZeroCompFailed, RecvZeroCompSuccess);
 		if (!PostZeroRecv(c_sobj, c_bobj))
@@ -186,18 +162,7 @@ void RecvCompSuccess(DWORD dwTransion, void* _sobj, void* _bobj)
 	}
 	else
 	{
-		// 处理命令
-		_tprintf(_T("接收到的数据: %s\n"), c_bobj->data);
-		_stprintf_s(c_bobj->data, c_bobj->datalen, _T("已经收到信息，正在进行处理"));
-		c_bobj->dwRecvedCount = _tcslen(c_bobj->data) + 1;
-		c_bobj->SetIoRequestFunction(SendCompFailed, SendCompSuccess);
-		if (!PostSend(c_sobj, c_bobj))
-		{
-			closesocket(c_sobj->sock);
-			freeSObj(c_sobj);
-			freeBObj(c_bobj);
-			return;
-		}
+		doParseData(c_bobj);
 	}
 }
 
