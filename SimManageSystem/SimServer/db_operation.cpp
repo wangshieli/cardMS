@@ -9,8 +9,6 @@ using std::vector;
 #define DB_PWD _T("baolan123")
 #define DB_DSN _T("mysql_db_a")
 
-#define WM_RELEASE_DBLINK WM_USER + 100
-
 int nMinConNum;
 int nMaxConNum;
 int nCurrentNum;

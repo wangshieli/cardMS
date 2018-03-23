@@ -1,5 +1,9 @@
 #pragma once
 
+#define WM_RELEASE_DBLINK WM_USER + 100
+
+extern unsigned int nThreadID;
+
 // 初始化连接池需要使用的资源
 void InitDBPool();
 

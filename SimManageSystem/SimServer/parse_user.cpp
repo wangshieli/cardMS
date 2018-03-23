@@ -10,18 +10,15 @@ void ReturnUserInfo(_RecordsetPtr& pRecord, msgpack::packer<msgpack::sbuffer>& m
 	VARIANT_BOOL bRt = pRecord->GetadoEOF();
 	while (!bRt)
 	{
-		msgPack.pack_array(4);
+		msgPack.pack_array(3);
 		_variant_t varUsername = pRecord->GetCollect("username");
 		AddData(varUsername, msgPack);
 
 		_variant_t varPassword = pRecord->GetCollect("password");
 		AddData(varPassword, msgPack);
 
-		_variant_t varl1 = pRecord->GetCollect("l1");
+		_variant_t varl1 = pRecord->GetCollect("xgrq");
 		AddData(varl1, msgPack);
-
-		_variant_t varl2 = pRecord->GetCollect("l2");
-		AddData(varl2, msgPack);
 
 		pRecord->MoveNext();
 		bRt = pRecord->GetadoEOF();
@@ -63,7 +60,7 @@ bool doParseUser(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 		ReleaseRecordset(pRecord);
 
 		memset(sql, 0x00, sizeof(sql));
-		_stprintf_s(sql, 256, _T("insert into user_tbl (id,username,password,l1,l2) value(null,'%s','%s',%d,%d)"), strUsername.c_str(), strPassword.c_str(), l1, l2);
+		_stprintf_s(sql, 256, _T("insert into user_tbl (id,username,password,xgrq) value(null,'%s','%s',now())"), strUsername.c_str(), strPassword.c_str());
 		CheckSqlResult(sql, nCmd, nSubCmd, msgPack);
 
 		DealLast(sbuf, bobj);
@@ -94,7 +91,7 @@ bool doParseUser(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 		msgPack.pack(nCmd);
 		msgPack.pack(nSubCmd);
 		msgPack.pack(1);
-		msgPack.pack(_T("查询成功"));
+		msgPack.pack(_T("success"));
 
 		ReturnUserInfo(pRecord, msgPack);
 		DealLast(sbuf, bobj);
@@ -127,7 +124,7 @@ bool doParseUser(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 		msgPack.pack(nCmd);
 		msgPack.pack(nSubCmd);
 		msgPack.pack(1);
-		msgPack.pack(_T("成功"));
+		msgPack.pack(_T("success"));
 
 		ReturnUserInfo(pRecord, msgPack);
 		DealLast(sbuf, bobj);
@@ -183,7 +180,7 @@ bool doParseUser(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 		msgPack.pack(nCmd);
 		msgPack.pack(nSubCmd);	
 		msgPack.pack(1);
-		msgPack.pack(_T("成功"));
+		msgPack.pack(_T("success"));
 		msgPack.pack(l1);
 		msgPack.pack(l2);
 

@@ -140,6 +140,35 @@ void AddData(const _variant_t& var, msgpack::packer<msgpack::sbuffer>& msgPack)
 	}
 }
 
+void AddYYYYMMDD(const _variant_t& var, msgpack::packer<msgpack::sbuffer>& msgPack)
+{
+	switch (var.vt)
+	{
+	case VT_DATE:
+	{
+		SYSTEMTIME st;
+		VariantTimeToSystemTime(var.date, &st);
+		TCHAR date[32];
+		memset(date, 0x00, sizeof(date));
+		_stprintf_s(date, 32, _T("%04d-%02d-%02d"), st.wYear, st.wMonth, st.wDay);
+		msgPack.pack(date);
+	}
+	break;
+
+	case VT_NULL:
+	case VT_EMPTY:
+	{
+		msgPack.pack(_T(""));
+	}
+	break;
+
+	case VT_UNKNOWN:
+	default:
+		msgPack.pack(_T("VT_UNKNOWN"));
+		break;
+	}
+}
+
 void ReturnSimpleInfo(msgpack::packer<msgpack::sbuffer>& msgPack, int nCmd, int nSubCmd, int nSuccess, const TCHAR* pErrInfo)
 {
 	msgPack.pack_array(4);
@@ -153,13 +182,13 @@ bool GetRecordSetDate(const TCHAR* sql, _RecordsetPtr& pRecord, int nCmd, int nS
 {
 	if (!GetRecordSet(sql, pRecord, adCmdText, true))
 	{
-		ReturnSimpleInfo(msgPack, B_MSG_SIM_0XBB, nSubCmd, 0, _T("查询失败,数据库异常_set"));
+		ReturnSimpleInfo(msgPack, B_MSG_SIM_0XBB, nSubCmd, 0, _T("失败"));
 		ReleaseRecordset(pRecord);
 		return false;
 	}
 	if (pRecord->adoEOF)
 	{
-		ReturnSimpleInfo(msgPack, B_MSG_SIM_0XBB, nSubCmd, 0, _T("查询失败,数据库异常_set"));
+		ReturnSimpleInfo(msgPack, B_MSG_SIM_0XBB, nSubCmd, 0, _T("失败"));
 		ReleaseRecordset(pRecord);
 		return false;
 	}
@@ -175,6 +204,6 @@ void CheckSqlResult(const TCHAR* sql, int nCmd, int nSubCmd, msgpack::packer<msg
 	}
 	else
 	{
-		ReturnSimpleInfo(msgPack, nCmd, nSubCmd, 1, _T("成功"));
+		ReturnSimpleInfo(msgPack, nCmd, nSubCmd, 1, _T("success"));
 	}
 }
