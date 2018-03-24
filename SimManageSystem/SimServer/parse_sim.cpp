@@ -69,46 +69,16 @@ void ReturnSimInfo(_RecordsetPtr& pRecord, msgpack::packer<msgpack::sbuffer>& ms
 	ReleaseRecordset(pRecord);
 }
 
-bool DoTrans(int nCount, ...)
-{
-	va_list ap;
-	va_start(ap, nCount);
-	_ConnectionPtr* conptr = GetTransConnection();
-	try
-	{
-		_variant_t EffectedRecCount;
-		(*conptr)->BeginTrans();
-		for (int i = 0; i < nCount; i++)
-		{
-			(*conptr)->Execute(_bstr_t(va_arg(ap, const TCHAR*)), &EffectedRecCount, adCmdText);
-		}
-		(*conptr)->CommitTrans();
-	}
-	catch (_com_error e)
-	{
-		(*conptr)->RollbackTrans();
-		PostThreadMessage(nThreadID, WM_RELEASE_DBLINK, (WPARAM)conptr, NULL);
-		return false;
-	}
-	catch (...)
-	{
-		PostThreadMessage(nThreadID, WM_RELEASE_DBLINK, (WPARAM)conptr, NULL);
-		return false;
-	}
-	PostThreadMessage(nThreadID, WM_RELEASE_DBLINK, (WPARAM)conptr, NULL);
-	return true;
-}
-
 bool doParseSim(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 {
+	int nCmd = CMD_SIM;
 	msgpack::object* pObj = result_.get().via.array.ptr;
 	pObj++;
 	int nSubCmd = (pObj++)->as<int>();
-	int nCmd = B_MSG_SIM_0XBB;
 
 	switch (nSubCmd)
 	{
-	case DO_INSERT_DATA:
+	case SUBCMD_ADD:
 	{
 		std::string strJrhm = (pObj++)->as<std::string>();
 		std::string strIccid = (pObj++)->as<std::string>();
@@ -145,73 +115,7 @@ bool doParseSim(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 	}
 	break;
 
-	case DO_SELECT_BY_KEY:// 使用接入号码查sim
-	{
-		std::string strSim = (pObj++)->as<std::string>();
-
-		msgpack::sbuffer sbuf;
-		msgpack::packer<msgpack::sbuffer> msgPack(&sbuf);
-		sbuf.write("\xfb\xfc", 6);
-		_RecordsetPtr pRecord;
-
-		const TCHAR* pSql = _T("select a.*,b.lx from sim_tbl as a, llc_tbl as b where a.jrhm='%s' and a.llc=b.dm");
-		//const TCHAR* pSql = _T("select * from sim_tbl where jrhm = '%s'");
-		TCHAR sql[256];
-		memset(sql, 0x00, 256);
-		_stprintf_s(sql, 256, pSql, strSim.c_str());
-		if (!GetRecordSetDate(sql, pRecord, nCmd, nSubCmd, msgPack))
-		{
-			DealLast(sbuf, bobj);
-			return false;
-		}
-
-		int lRstCount = pRecord->GetRecordCount();
-		msgPack.pack_array(4 + lRstCount);
-		msgPack.pack(nCmd);
-		msgPack.pack(nSubCmd);
-		msgPack.pack(1);
-		msgPack.pack(_T("success"));
-
-		ReturnSimInfo(pRecord, msgPack);
-		DealLast(sbuf, bobj);
-	}
-	break;
-
-	case DO_SELECT_BY_ID:// 根据tag返回一定数量的卡信息
-	{
-		int nTag = (pObj++)->as<int>();
-		int nStart = 200 * (nTag - 1) + 1;
-		int nEnd = 200 * nTag;
-
-		msgpack::sbuffer sbuf;
-		msgpack::packer<msgpack::sbuffer> msgPack(&sbuf);
-		sbuf.write("\xfb\xfc", 6);
-		_RecordsetPtr pRecord;
-
-		const TCHAR* pSql = _T("select a.*,b.lx from sim_tbl as a, llc_tbl as b where a.id between %d and %d and a.llc=b.dm");
-		//const TCHAR* pSql = _T("select * from sim_tbl where id  between %d and %d");// 主键范围
-		TCHAR sql[256];
-		memset(sql, 0x00, 256);
-		_stprintf_s(sql, 256, pSql, nStart, nEnd);
-		if (!GetRecordSetDate(sql, pRecord, nCmd, nSubCmd, msgPack))
-		{
-			DealLast(sbuf, bobj);
-			return false;
-		}
-
-		long lRstCount = pRecord->GetRecordCount();
-		msgPack.pack_array(4 + lRstCount);
-		msgPack.pack(nCmd);
-		msgPack.pack(nSubCmd);
-		msgPack.pack(1);
-		msgPack.pack(_T("success"));
-
-		ReturnSimInfo(pRecord, msgPack);
-		DealLast(sbuf, bobj);
-	}
-	break;
-
-	case DO_UPDATE_DATA:
+	case SUBCMD_MODIFY:
 	{
 		std::string strOsim = (pObj++)->as<std::string>();
 		std::string strNsim = (pObj++)->as<std::string>();
@@ -245,7 +149,77 @@ bool doParseSim(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 	}
 	break;
 
-	case DO_SELECT_BY_USER:
+	case SUBCMD_SELECT_BY_KEY:// 使用接入号码查sim
+	{
+		std::string strSim = (pObj++)->as<std::string>();
+
+		msgpack::sbuffer sbuf;
+		msgpack::packer<msgpack::sbuffer> msgPack(&sbuf);
+		sbuf.write("\xfb\xfc", 6);
+		_RecordsetPtr pRecord;
+
+		const TCHAR* pSql = _T("select a.*,b.lx from sim_tbl as a, llc_tbl as b where a.jrhm='%s' and a.llc=b.dm");
+		//const TCHAR* pSql = _T("select * from sim_tbl where jrhm = '%s'");
+		TCHAR sql[256];
+		memset(sql, 0x00, 256);
+		_stprintf_s(sql, 256, pSql, strSim.c_str());
+		if (!GetRecordSetDate(sql, pRecord, nCmd, nSubCmd, msgPack))
+		{
+			DealLast(sbuf, bobj);
+			return false;
+		}
+
+		int lRstCount = pRecord->GetRecordCount();
+		msgPack.pack_array(4 + lRstCount);
+		msgPack.pack(nCmd);
+		msgPack.pack(nSubCmd);
+		msgPack.pack(1);
+		msgPack.pack(_T("success"));
+
+		ReturnSimInfo(pRecord, msgPack);
+		DealLast(sbuf, bobj);
+	}
+	break;
+
+	case SUBCMD_SELECT_BY_TAG:// 根据tag返回一定数量的卡信息
+	{
+		int nTag = (pObj++)->as<int>();
+		int nStart = 200 * (nTag - 1) + 1;
+		int nEnd = 200 * nTag;
+
+		msgpack::sbuffer sbuf;
+		msgpack::packer<msgpack::sbuffer> msgPack(&sbuf);
+		sbuf.write("\xfb\xfc", 6);
+		_RecordsetPtr pRecord;
+
+		const TCHAR* pSql = _T("select a.*,b.lx from sim_tbl as a, llc_tbl as b where a.id between %d and %d and a.llc=b.dm");
+		//const TCHAR* pSql = _T("select * from sim_tbl where id  between %d and %d");// 主键范围
+		TCHAR sql[256];
+		memset(sql, 0x00, 256);
+		_stprintf_s(sql, 256, pSql, nStart, nEnd);
+		if (!GetRecordSetDate(sql, pRecord, nCmd, nSubCmd, msgPack))
+		{
+			DealLast(sbuf, bobj);
+			return false;
+		}
+
+		long lRstCount = pRecord->GetRecordCount();
+		msgPack.pack_array(4 + lRstCount);
+		msgPack.pack(nCmd);
+		msgPack.pack(nSubCmd);
+		msgPack.pack(1);
+		msgPack.pack(_T("success"));
+
+		ReturnSimInfo(pRecord, msgPack);
+		DealLast(sbuf, bobj);
+	}
+	break;
+
+	case SIM_SELECT_BY_ICCIC:
+	{}
+	break;
+
+	case SIM_SELECT_BY_KH:
 	{
 		int nTag = (pObj++)->as<int>();
 		std::string strUser = (pObj++)->as<std::string>();
@@ -278,19 +252,19 @@ bool doParseSim(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 	}
 	break;
 
-	case DO_DEVICE_STOP:
+	case SIM_STOP:
 	{
 		
 	}
 	break;
 
-	case DO_DEVICE_START:
+	case SIM_START:
 	{
 		
 	}
 	break;
 
-	case DO_DEVICE_UPDATE:
+	case SIM_STATE_UPDATE:
 	{
 		
 	}

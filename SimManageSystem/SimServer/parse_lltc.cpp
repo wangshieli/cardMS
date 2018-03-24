@@ -28,14 +28,14 @@ void ReturnLltcInfo(_RecordsetPtr& pRecord, msgpack::packer<msgpack::sbuffer>& m
 
 bool doParseLltc(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 {
+	int nCmd = CMD_LLTC;
 	msgpack::object* pObj = result_.get().via.array.ptr;
 	pObj++;
 	int nSubCmd = (pObj++)->as<int>();
-	int nCmd = B_MSG_LLTC_0X8B;
 
 	switch (nSubCmd)
 	{
-	case DO_INSERT_DATA:
+	case SUBCMD_ADD:
 	{
 		std::string strTcfl = (pObj++)->as<std::string>();
 		std::string strTcmc = (pObj++)->as<std::string>();
@@ -54,7 +54,27 @@ bool doParseLltc(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 	}
 	break;
 
-	case DO_SELECT_BY_KEY:
+	case SUBCMD_MODIFY:
+	{
+		std::string strOtcmc = (pObj++)->as<std::string>();
+		std::string strNtcmc = (pObj++)->as<std::string>();
+		std::string strTcfl = (pObj++)->as<std::string>();
+
+		msgpack::sbuffer sbuf;
+		msgpack::packer<msgpack::sbuffer> msgPack(&sbuf);
+		sbuf.write("\xfb\xfc", 6);
+
+		const TCHAR* pSql = _T("update lltc_tbl set tcmc = '%s',tcfl= '%s' where tcmc = '%s'");
+		TCHAR sql[512];
+		memset(sql, 0x00, sizeof(sql));
+		_stprintf_s(sql, 512, pSql, strNtcmc.c_str(), strTcfl.c_str(), strOtcmc.c_str());
+		CheckSqlResult(sql, nCmd, nSubCmd, msgPack);
+
+		DealLast(sbuf, bobj);
+	}
+	break;
+
+	case SUBCMD_SELECT_BY_KEY:
 	{
 		std::string strTcmc = (pObj++)->as<std::string>();
 
@@ -86,7 +106,7 @@ bool doParseLltc(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 	}
 	break;
 
-	case DO_SELECT_BY_ID:
+	case SUBCMD_SELECT_BY_TAG:
 	{
 		int nTag = (pObj++)->as<int>();
 		int nStart = 200 * (nTag - 1) + 1;
@@ -119,25 +139,6 @@ bool doParseLltc(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 	}
 	break;
 
-	case DO_UPDATE_DATA:
-	{
-		std::string strOtcmc = (pObj++)->as<std::string>();
-		std::string strNtcmc = (pObj++)->as<std::string>();
-		std::string strTcfl = (pObj++)->as<std::string>();
-
-		msgpack::sbuffer sbuf;
-		msgpack::packer<msgpack::sbuffer> msgPack(&sbuf);
-		sbuf.write("\xfb\xfc", 6);
-
-		const TCHAR* pSql = _T("update lltc_tbl set tcmc = '%s',tcfl= '%s' where tcmc = '%s'");
-		TCHAR sql[512];
-		memset(sql, 0x00, sizeof(sql));
-		_stprintf_s(sql, 512, pSql, strNtcmc.c_str(), strTcfl.c_str(), strOtcmc.c_str());
-		CheckSqlResult(sql, nCmd, nSubCmd, msgPack);
-
-		DealLast(sbuf, bobj);
-	}
-	break;
 	default:
 		break;
 	}

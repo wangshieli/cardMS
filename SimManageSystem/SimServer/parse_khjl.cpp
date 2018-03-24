@@ -41,13 +41,14 @@ void ReturnKhjlInfo(_RecordsetPtr& pRecord, msgpack::packer<msgpack::sbuffer>& m
 
 bool doParseKhjl(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 {
+	int nCmd = CMD_KHJL;
 	msgpack::object* pObj = result_.get().via.array.ptr;
 	pObj++;
 	int nSubCmd = (pObj++)->as<int>();
-	int nCmd = B_MSG_KHJL_0XEB;
+	
 	switch (nSubCmd)
 	{
-	case DO_INSERT_DATA:
+	case SUBCMD_ADD:
 	{
 		std::string strXm = (pObj++)->as<std::string>();
 		std::string strLxfs = (pObj++)->as<std::string>();
@@ -69,7 +70,31 @@ bool doParseKhjl(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 	}
 	break;
 
-	case DO_SELECT_BY_KEY:
+	case SUBCMD_MODIFY:
+	{
+		std::string strOxm = (pObj++)->as<std::string>();
+		std::string strNxm = (pObj++)->as<std::string>();
+		std::string strLxfs = (pObj++)->as<std::string>();
+		std::string strUser = (pObj++)->as<std::string>();
+		std::string strGf = (pObj++)->as<std::string>();
+		std::string strBz = (pObj++)->as<std::string>();
+
+		msgpack::sbuffer sbuf;
+		msgpack::packer<msgpack::sbuffer> msgPack(&sbuf);
+		sbuf.write("\xfb\xfc", 6);
+
+		const TCHAR* pSql = _T("update khjl_tbl set xm = '%s', lxfs= '%s',user= '%s',gf= '%s',bz='%s',xgrq=now() where xm = '%s'");
+
+		TCHAR sql[512];
+		memset(sql, 0x00, sizeof(sql));
+		_stprintf_s(sql, 512, pSql, strNxm.c_str(), strLxfs.c_str(), strUser.c_str(), strGf.c_str(), strBz.c_str(), strOxm.c_str());
+		CheckSqlResult(sql, nCmd, nSubCmd, msgPack);
+
+		DealLast(sbuf, bobj);
+	}
+	break;
+
+	case SUBCMD_SELECT_BY_KEY:
 	{
 		std::string strXm = (pObj++)->as<std::string>();
 
@@ -100,7 +125,7 @@ bool doParseKhjl(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 	}
 	break;
 
-	case DO_SELECT_BY_ID:
+	case SUBCMD_SELECT_BY_TAG:
 	{
 		int nTag = (pObj++)->as<int>();
 		int nStart = 200 * (nTag - 1) + 1;
@@ -133,29 +158,6 @@ bool doParseKhjl(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 	}
 	break;
 
-	case DO_UPDATE_DATA:
-	{
-		std::string strOxm = (pObj++)->as<std::string>();
-		std::string strNxm = (pObj++)->as<std::string>();
-		std::string strLxfs = (pObj++)->as<std::string>();
-		std::string strUser = (pObj++)->as<std::string>();
-		std::string strGf = (pObj++)->as<std::string>();
-		std::string strBz = (pObj++)->as<std::string>();
-
-		msgpack::sbuffer sbuf;
-		msgpack::packer<msgpack::sbuffer> msgPack(&sbuf);
-		sbuf.write("\xfb\xfc", 6);
-
-		const TCHAR* pSql = _T("update khjl_tbl set xm = '%s', lxfs= '%s',user= '%s',gf= '%s',bz='%s',xgrq=now() where xm = '%s'");
-
-		TCHAR sql[512];
-		memset(sql, 0x00, sizeof(sql));
-		_stprintf_s(sql, 512, pSql, strNxm.c_str(), strLxfs.c_str(), strUser.c_str(), strGf.c_str(), strBz.c_str(), strOxm.c_str());
-		CheckSqlResult(sql, nCmd, nSubCmd, msgPack);
-
-		DealLast(sbuf, bobj);
-	}
-	break;
 	default:
 		break;
 	}

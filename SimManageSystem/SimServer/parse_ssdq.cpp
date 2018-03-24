@@ -25,14 +25,14 @@ void ReturnSsdqInfo(_RecordsetPtr& pRecord, msgpack::packer<msgpack::sbuffer>& m
 
 bool doParseSsdq(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 {
+	int nCmd = CMD_SSDQ;
 	msgpack::object* pObj = result_.get().via.array.ptr;
 	pObj++;
 	int nSubCmd = (pObj++)->as<int>();
-	int nCmd = B_MSG_SSDQ_0X7B;
 
 	switch (nSubCmd)
 	{
-	case DO_INSERT_DATA:
+	case SUBCMD_ADD:
 	{
 		std::string strSsdq = (pObj++)->as<std::string>();
 
@@ -50,7 +50,26 @@ bool doParseSsdq(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 	}
 	break;
 
-	case DO_SELECT_BY_KEY:
+	case SUBCMD_MODIFY:
+	{
+		std::string strOssdq = (pObj++)->as<std::string>();
+		std::string strNssdq = (pObj++)->as<std::string>();
+
+		msgpack::sbuffer sbuf;
+		msgpack::packer<msgpack::sbuffer> msgPack(&sbuf);
+		sbuf.write("\xfb\xfc", 6);
+
+		const TCHAR* pSql = _T("update ssdq_tbl set ssdq = '%s' where ssdq = '%s'");
+		TCHAR sql[512];
+		memset(sql, 0x00, sizeof(sql));
+		_stprintf_s(sql, 512, pSql, strNssdq.c_str(), strOssdq.c_str());
+		CheckSqlResult(sql, nCmd, nSubCmd, msgPack);
+
+		DealLast(sbuf, bobj);
+	}
+	break;
+
+	case SUBCMD_SELECT_BY_KEY:
 	{
 		std::string strSsdq = (pObj++)->as<std::string>();
 
@@ -81,7 +100,7 @@ bool doParseSsdq(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 	}
 	break;
 
-	case DO_SELECT_BY_ID:
+	case SUBCMD_SELECT_BY_TAG:
 	{
 		int nTag = (pObj++)->as<int>();
 		int nStart = 200 * (nTag - 1) + 1;
@@ -114,24 +133,6 @@ bool doParseSsdq(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 	}
 	break;
 
-	case DO_UPDATE_DATA:
-	{
-		std::string strOssdq= (pObj++)->as<std::string>();
-		std::string strNssdq = (pObj++)->as<std::string>();
-
-		msgpack::sbuffer sbuf;
-		msgpack::packer<msgpack::sbuffer> msgPack(&sbuf);
-		sbuf.write("\xfb\xfc", 6);
-
-		const TCHAR* pSql = _T("update ssdq_tbl set ssdq = '%s' where ssdq = '%s'");
-		TCHAR sql[512];
-		memset(sql, 0x00, sizeof(sql));
-		_stprintf_s(sql, 512, pSql, strNssdq.c_str(), strOssdq.c_str());
-		CheckSqlResult(sql, nCmd, nSubCmd, msgPack);
-
-		DealLast(sbuf, bobj);
-	}
-	break;
 	default:
 		break;
 	}

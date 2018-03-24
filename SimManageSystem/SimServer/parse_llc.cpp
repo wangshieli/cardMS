@@ -37,14 +37,14 @@ void ReturnLlcInfo(_RecordsetPtr& pRecord, msgpack::packer<msgpack::sbuffer>& ms
 
 bool doParseLlc(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 {
+	int nCmd = CMD_LLC;
 	msgpack::object* pObj = result_.get().via.array.ptr;
 	pObj++;
 	int nSubCmd = (pObj++)->as<int>();
-	int nCmd = B_MSG_LLC_0X9B;
 
 	switch (nSubCmd)
 	{
-	case DO_INSERT_DATA:
+	case SUBCMD_ADD:
 	{
 		std::string strDm = (pObj++)->as<std::string>();
 		std::string strLx = (pObj++)->as<std::string>();
@@ -65,7 +65,30 @@ bool doParseLlc(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 	}
 	break;
 
-	case DO_SELECT_BY_KEY:
+	case SUBCMD_MODIFY:
+	{
+		std::string strOdm = (pObj++)->as<std::string>();
+		std::string strNdm = (pObj++)->as<std::string>();
+		std::string strLx = (pObj++)->as<std::string>();
+		std::string strDxzh = (pObj++)->as<std::string>();
+		std::string strBz = (pObj++)->as<std::string>();
+
+		msgpack::sbuffer sbuf;
+		msgpack::packer<msgpack::sbuffer> msgPack(&sbuf);
+		sbuf.write("\xfb\xfc", 6);
+
+		const TCHAR* pSql = _T("update llc_tbl set dm = '%s', lx = '%s',dxzh= '%s',bz='%s',xgrq=now() where dm = '%s'");
+
+		TCHAR sql[512];
+		memset(sql, 0x00, sizeof(sql));
+		_stprintf_s(sql, 512, pSql, strNdm.c_str(), strLx.c_str(), strDxzh.c_str(), strBz.c_str(), strOdm.c_str());
+		CheckSqlResult(sql, nCmd, nSubCmd, msgPack);
+
+		DealLast(sbuf, bobj);
+	}
+	break;
+
+	case SUBCMD_SELECT_BY_KEY:
 	{
 		std::string strDm = (pObj++)->as<std::string>();
 		msgpack::sbuffer sbuf;
@@ -95,7 +118,7 @@ bool doParseLlc(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 	}
 	break;
 
-	case DO_SELECT_BY_ID:
+	case SUBCMD_SELECT_BY_TAG:
 	{
 		int nTag = (pObj++)->as<int>();
 		int nStart = 200 * (nTag - 1) + 1;
@@ -128,28 +151,6 @@ bool doParseLlc(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 	}
 	break;
 
-	case DO_UPDATE_DATA:
-	{
-		std::string strOdm = (pObj++)->as<std::string>();
-		std::string strNdm = (pObj++)->as<std::string>();
-		std::string strLx = (pObj++)->as<std::string>();
-		std::string strDxzh = (pObj++)->as<std::string>();
-		std::string strBz = (pObj++)->as<std::string>();
-
-		msgpack::sbuffer sbuf;
-		msgpack::packer<msgpack::sbuffer> msgPack(&sbuf);
-		sbuf.write("\xfb\xfc", 6);
-
-		const TCHAR* pSql = _T("update llc_tbl set dm = '%s', lx = '%s',dxzh= '%s',bz='%s',xgrq=now() where dm = '%s'");
-
-		TCHAR sql[512];
-		memset(sql, 0x00, sizeof(sql));
-		_stprintf_s(sql, 512, pSql, strNdm.c_str(), strLx.c_str(), strDxzh.c_str(), strBz.c_str(), strOdm.c_str());
-		CheckSqlResult(sql, nCmd, nSubCmd, msgPack);
-
-		DealLast(sbuf, bobj);
-	}
-	break;
 	default:
 		break;
 	}

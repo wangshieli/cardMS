@@ -182,13 +182,31 @@ bool GetRecordSetDate(const TCHAR* sql, _RecordsetPtr& pRecord, int nCmd, int nS
 {
 	if (!GetRecordSet(sql, pRecord, adCmdText, true))
 	{
-		ReturnSimpleInfo(msgPack, B_MSG_SIM_0XBB, nSubCmd, 0, _T("Ê§°Ü"));
+		ReturnSimpleInfo(msgPack, nCmd, nSubCmd, 0, _T("Ê§°Ü"));
 		ReleaseRecordset(pRecord);
 		return false;
 	}
 	if (pRecord->adoEOF)
 	{
-		ReturnSimpleInfo(msgPack, B_MSG_SIM_0XBB, nSubCmd, 0, _T("Ê§°Ü"));
+		ReturnSimpleInfo(msgPack, nCmd, nSubCmd, 0, _T("Ê§°Ü"));
+		ReleaseRecordset(pRecord);
+		return false;
+	}
+
+	return true;
+}
+
+bool GetRecordSetDate(const TCHAR* sql, _RecordsetPtr& pRecord, int nCmd, int nSubCmd, msgpack::packer<msgpack::sbuffer>& msgPack, bool bGlag)
+{
+	if (!GetRecordSet(sql, pRecord, adCmdText, true))
+	{
+		ReturnSimpleInfo(msgPack, nCmd, nSubCmd, 0, _T("Ê§°Ü"));
+		ReleaseRecordset(pRecord);
+		return false;
+	}
+	if (!pRecord->adoEOF)
+	{
+		ReturnSimpleInfo(msgPack, nCmd, nSubCmd, 0, _T("Ê§°Ü"));
 		ReleaseRecordset(pRecord);
 		return false;
 	}
@@ -206,4 +224,32 @@ void CheckSqlResult(const TCHAR* sql, int nCmd, int nSubCmd, msgpack::packer<msg
 	{
 		ReturnSimpleInfo(msgPack, nCmd, nSubCmd, 1, _T("success"));
 	}
+}
+
+bool DoTrans(int nCount, ...)
+{
+	va_list ap;
+	va_start(ap, nCount);
+	_ConnectionPtr* conptr = GetTransConnection();
+	try
+	{
+		_variant_t EffectedRecCount;
+		(*conptr)->BeginTrans();
+		for (int i = 0; i < nCount; i++)
+		{
+			(*conptr)->Execute(_bstr_t(va_arg(ap, const TCHAR*)), &EffectedRecCount, adCmdText);
+		}
+		(*conptr)->CommitTrans();
+	}
+	catch (_com_error e)
+	{
+		(*conptr)->RollbackTrans();
+		PostThreadMessage(nThreadID, WM_RELEASE_DBLINK, (WPARAM)conptr, NULL);
+		va_end(ap);
+		return false;
+	}
+
+	PostThreadMessage(nThreadID, WM_RELEASE_DBLINK, (WPARAM)conptr, NULL);
+	va_end(ap);
+	return true;
 }
