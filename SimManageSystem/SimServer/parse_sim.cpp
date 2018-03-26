@@ -226,12 +226,12 @@ bool DoTrans_RenewData_LeadIn(msgpack::object* pObj)
 		{
 			msgpack::object* pSubObj = (pObj++)->via.array.ptr;
 			std::string strJrhm = (pSubObj++)->as<std::string>();
-			std::string strZxrq = (pSubObj++)->as<std::string>();
-			std::string strZt = (pSubObj++)->as<std::string>();
+			std::string strXfrq = (pSubObj++)->as<std::string>();
+			std::string strDqrq = (pSubObj++)->as<std::string>();
 
 			pSql = _T("update sim_tbl set zt='%s',zxrq='%s' where jrhm='%s'");
 			memset(sql, 0x00, sizeof(sql));
-			_stprintf_s(sql, 256, pSql, strZt.c_str(), strZxrq.c_str(), strJrhm.c_str());
+			_stprintf_s(sql, 256, pSql, strXfrq.c_str(), strDqrq.c_str(), strJrhm.c_str());
 			(*conptr)->Execute(_bstr_t(sql), &EffectedRecCount, adCmdText);
 		}
 		pSql = _T("update llc_tbl set zsl=zsl+%d,kysl=kysl+%d,xgsj=now() where llchm='%s'");

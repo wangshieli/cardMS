@@ -540,8 +540,8 @@ void CSimManageClientDlg::OnBnClickedButton3()
 		CString strJrhm;
 		strJrhm.Format("jrhm_%d", ++n);
 		msgPack.pack(strJrhm.GetBuffer(0));
-		msgPack.pack("2018-03-26");
-		msgPack.pack("注销");
+		msgPack.pack("2018-03-26");// 续费日期
+		msgPack.pack("2018-03-27");// 到期日期
 	}
 
 	DealLast(sbuf);
