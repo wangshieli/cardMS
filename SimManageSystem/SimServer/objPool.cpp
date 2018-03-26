@@ -46,7 +46,7 @@ BUFFER_OBJ* allocBObj(DWORD nSize)
 	BUFFER_OBJ* obj = NULL;
 	EnterCriticalSection(&g_csBObj);
 	if (g_VBObj.empty())
-		obj = (BUFFER_OBJ*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, nSize + SIZE_OF_BUFFER_OBJ_T);
+		obj = (BUFFER_OBJ*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, nSize);
 	else
 	{
 		obj = g_VBObj.back();
@@ -55,7 +55,7 @@ BUFFER_OBJ* allocBObj(DWORD nSize)
 	LeaveCriticalSection(&g_csBObj);
 
 	if (obj)
-		obj->init(nSize);
+		obj->init(nSize - SIZE_OF_BUFFER_OBJ_T);
 
 	return obj;
 }

@@ -55,10 +55,10 @@ bool doParseLlc(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 		msgpack::packer<msgpack::sbuffer> msgPack(&sbuf);
 		sbuf.write("\xfb\xfc", 6);
 
-		const TCHAR* pSql = _T("insert into llc_tbl (id,lx,dm,dxzh,bz,xgrq) value(null,'%s','%s','%s','%s',now())");
-		TCHAR sql[512];
+		const TCHAR* pSql = _T("insert into llc_tbl (id,llchm,llclx,dxzh,bz,xgsj=now()) value(null,'%s','%s','%s','%s')");
+		TCHAR sql[256];
 		memset(sql, 0x00, sizeof(sql));
-		_stprintf_s(sql, 512, pSql, strLx.c_str(), strDm.c_str(), strDxzh.c_str(), strBz.c_str());
+		_stprintf_s(sql, 256, pSql, strDm.c_str(), strLx.c_str(), strDxzh.c_str(), strBz.c_str());
 		CheckSqlResult(sql, nCmd, nSubCmd, msgPack);
 
 		DealLast(sbuf, bobj);

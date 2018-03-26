@@ -54,6 +54,7 @@ CSimManageClientDlg::CSimManageClientDlg(CWnd* pParent /*=NULL*/)
 	, s(INVALID_SOCKET)
 	, m_iTag(0)
 	, m_strNewpassword(_T(""))
+	, m_iCount(0)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
@@ -65,6 +66,7 @@ void CSimManageClientDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_EDIT_PASSWORD, m_strPassword);
 	DDX_Text(pDX, IDC_EDIT_TAG, m_iTag);
 	DDX_Text(pDX, IDC_EDIT_NEWPASSWORD, m_strNewpassword);
+	DDX_Text(pDX, IDC_EDIT_COUNT, m_iCount);
 }
 
 BEGIN_MESSAGE_MAP(CSimManageClientDlg, CDialogEx)
@@ -78,6 +80,9 @@ BEGIN_MESSAGE_MAP(CSimManageClientDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BTN_SELECTBYTAG, &CSimManageClientDlg::OnBnClickedBtnSelectbytag)
 	ON_BN_CLICKED(IDC_BTN_MODIFYPASSWORD, &CSimManageClientDlg::OnBnClickedBtnModifypassword)
 	ON_BN_CLICKED(IDC_BTN_TEST, &CSimManageClientDlg::OnBnClickedBtnTest)
+	ON_BN_CLICKED(IDC_BTN_ONE, &CSimManageClientDlg::OnBnClickedBtnOne)
+	ON_BN_CLICKED(IDC_BUTTON2, &CSimManageClientDlg::OnBnClickedButton2)
+	ON_BN_CLICKED(IDC_BUTTON3, &CSimManageClientDlg::OnBnClickedButton3)
 END_MESSAGE_MAP()
 
 
@@ -398,19 +403,147 @@ void CSimManageClientDlg::OnBnClickedBtnTest()
 	// TODO: 在此添加控件通知处理程序代码
 	OnBnClickedBtnLinkserver();
 	UpdateData();
+	int n = 0;
+	int m = 0;
+	/*for (int i = 0; i < 20; i++)
+	{
+		sbuffer sbuf;
+	packer<sbuffer> msgPack(&sbuf);
+	sbuf.write("\xfb\xfc", 6);
+	msgPack.pack_array(6 + nCountOfData);
+	msgPack.pack((int)CMD_SIM);
+	msgPack.pack((int)SIM_LEAD_IN);
+	msgPack.pack(m_iTag);
+	msgPack.pack(nCountOfData);
+	msgPack.pack("98654123");
+	msgPack.pack("后向");
+	for (int i = 0; i < nCountOfData; i++)
+	{
+		msgPack.pack_array(3);
+		CString strJrhm;
+		strJrhm.Format("jrhm_%d", ++n);
+		msgPack.pack(strJrhm.GetBuffer(0));
+		CString strIccid;
+		strIccid.Format("iccid_%d", ++m);
+		msgPack.pack(strIccid.GetBuffer(0));
+		msgPack.pack("中国电信");
+	}
+
+	DealLast(sbuf);
+	}*/
 	sbuffer sbuf;
 	packer<sbuffer> msgPack(&sbuf);
 	sbuf.write("\xfb\xfc", 6);
-	msgPack.pack_array(5);
-	msgPack.pack((int)CMD_USER);
-	msgPack.pack((int)USER_REGISTER);
-	msgPack.pack(2);
-	msgPack.pack_array(2);
-	msgPack.pack("test01");
-	msgPack.pack("test02");
-	msgPack.pack_array(2);
-	msgPack.pack("test03");
-	msgPack.pack("test04");
+	msgPack.pack_array(6 + m_iCount);
+	msgPack.pack((int)CMD_SIM);
+	msgPack.pack((int)SIM_NEWCARD_LEAD_IN);
+	msgPack.pack(m_iTag);
+	msgPack.pack(m_iCount);
+	msgPack.pack("123456789");
+	msgPack.pack("后向");
+	for (int i = 0; i < m_iCount; i++)
+	{
+		msgPack.pack_array(3);
+		CString strJrhm;
+		strJrhm.Format("jrhm_%d", ++n);
+		msgPack.pack(strJrhm.GetBuffer(0));
+		CString strIccid;
+		strIccid.Format("iccid_%d", ++m);
+		msgPack.pack(strIccid.GetBuffer(0));
+		msgPack.pack("中国电信");
+	}
+
+	DealLast(sbuf);
+	closesocket(s);
+	s = INVALID_SOCKET;
+}
+
+
+void CSimManageClientDlg::OnBnClickedBtnOne()
+{
+	// TODO: 在此添加控件通知处理程序代码
+	OnBnClickedBtnLinkserver();
+	UpdateData();
+	sbuffer sbuf;
+	packer<sbuffer> msgPack(&sbuf);
+	sbuf.write("\xfb\xfc", 6);
+	msgPack.pack_array(6);
+	msgPack.pack((int)CMD_SIM);
+	msgPack.pack((int)SUBCMD_ADD);
+	msgPack.pack("jrhm_1");
+	msgPack.pack("iccid_1");
+	msgPack.pack("中国电信");
+	msgPack.pack("123456789");
+	DealLast(sbuf);
+	closesocket(s);
+	s = INVALID_SOCKET;
+}
+
+
+void CSimManageClientDlg::OnBnClickedButton2()
+{
+	// TODO: 在此添加控件通知处理程序代码
+	OnBnClickedBtnLinkserver();
+	UpdateData();
+	int n = 0;
+	int m = 0;
+
+	sbuffer sbuf;
+	packer<sbuffer> msgPack(&sbuf);
+	sbuf.write("\xfb\xfc", 6);
+	msgPack.pack_array(5 + m_iCount);
+	msgPack.pack((int)CMD_SIM);
+	msgPack.pack((int)SIM_USECARD_LEAD_IN);
+	msgPack.pack(m_iTag);
+	msgPack.pack(m_iCount);
+	msgPack.pack("123456789");
+	for (int i = 0; i < m_iCount; i++)
+	{
+		msgPack.pack_array(5);
+		CString strJrhm;
+		strJrhm.Format("jrhm_%d", ++n);
+		msgPack.pack(strJrhm.GetBuffer(0));
+		CString strIccid;
+		strIccid.Format("iccid_%d", ++m);
+		msgPack.pack(strIccid.GetBuffer(0));
+		msgPack.pack("何永利");
+		msgPack.pack("2018-03-26");
+		msgPack.pack("在用");
+	}
+
+	DealLast(sbuf);
+	closesocket(s);
+	s = INVALID_SOCKET;
+}
+
+
+void CSimManageClientDlg::OnBnClickedButton3()
+{
+	// TODO: 在此添加控件通知处理程序代码
+	OnBnClickedBtnLinkserver();
+	UpdateData();
+	int n = 0;
+	int m = 0;
+
+	sbuffer sbuf;
+	packer<sbuffer> msgPack(&sbuf);
+	sbuf.write("\xfb\xfc", 6);
+	msgPack.pack_array(5 + m_iCount);
+	msgPack.pack((int)CMD_SIM);
+	msgPack.pack((int)SIM_CANCELDATA_LEAD_IN);
+	msgPack.pack(m_iTag);
+	msgPack.pack(m_iCount);
+	msgPack.pack("123456789");
+	for (int i = 0; i < m_iCount; i++)
+	{
+		msgPack.pack_array(3);
+		CString strJrhm;
+		strJrhm.Format("jrhm_%d", ++n);
+		msgPack.pack(strJrhm.GetBuffer(0));
+		msgPack.pack("2018-03-26");
+		msgPack.pack("注销");
+	}
+
 	DealLast(sbuf);
 	closesocket(s);
 	s = INVALID_SOCKET;

@@ -47,4 +47,8 @@ public:
 	CString m_strNewpassword;
 	afx_msg void OnBnClickedBtnModifypassword();
 	afx_msg void OnBnClickedBtnTest();
+	int m_iCount;
+	afx_msg void OnBnClickedBtnOne();
+	afx_msg void OnBnClickedButton2();
+	afx_msg void OnBnClickedButton3();
 };

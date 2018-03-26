@@ -197,6 +197,8 @@ void SendCompSuccess(DWORD dwTransion, void* _sobj, void* _bobj)
 		return;
 	}
 
+	c_bobj->dwRecvedCount = 0;
+	c_bobj->dwSendedCount = 0;
 	c_bobj->SetIoRequestFunction(RecvZeroCompFailed, RecvZeroCompSuccess);
 	if (!PostZeroRecv(c_sobj, c_bobj))
 	{
