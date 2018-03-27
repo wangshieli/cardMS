@@ -83,6 +83,8 @@ BEGIN_MESSAGE_MAP(CSimManageClientDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BTN_ONE, &CSimManageClientDlg::OnBnClickedBtnOne)
 	ON_BN_CLICKED(IDC_BUTTON2, &CSimManageClientDlg::OnBnClickedButton2)
 	ON_BN_CLICKED(IDC_BUTTON3, &CSimManageClientDlg::OnBnClickedButton3)
+	ON_BN_CLICKED(IDC_BUTTON1, &CSimManageClientDlg::OnBnClickedButton1)
+	ON_BN_CLICKED(IDC_BUTTON4, &CSimManageClientDlg::OnBnClickedButton4)
 END_MESSAGE_MAP()
 
 
@@ -540,8 +542,72 @@ void CSimManageClientDlg::OnBnClickedButton3()
 		CString strJrhm;
 		strJrhm.Format("jrhm_%d", ++n);
 		msgPack.pack(strJrhm.GetBuffer(0));
-		msgPack.pack("2018-03-26");// 续费日期
-		msgPack.pack("2018-03-27");// 到期日期
+		msgPack.pack("2018-03-26");
+		msgPack.pack("注销");
+	}
+
+	DealLast(sbuf);
+	closesocket(s);
+	s = INVALID_SOCKET;
+}
+
+
+void CSimManageClientDlg::OnBnClickedButton1()
+{
+	// TODO: 在此添加控件通知处理程序代码
+	OnBnClickedBtnLinkserver();
+	UpdateData();
+	int n = 0;
+	int m = 0;
+
+	sbuffer sbuf;
+	packer<sbuffer> msgPack(&sbuf);
+	sbuf.write("\xfb\xfc", 6);
+	msgPack.pack_array(5 + m_iCount);
+	msgPack.pack((int)CMD_SIM);
+	msgPack.pack((int)SIM_RENEWDATE_LEAD_IN);
+	msgPack.pack(m_iTag);
+	msgPack.pack(m_iCount);
+	msgPack.pack("123456789");
+	for (int i = 0; i < m_iCount; i++)
+	{
+		msgPack.pack_array(3);
+		CString strJrhm;
+		strJrhm.Format("jrhm_%d", ++n);
+		msgPack.pack(strJrhm.GetBuffer(0));
+		msgPack.pack("2019-04-26");// 续费日期
+		msgPack.pack(2);// 到期日期
+	}
+
+	DealLast(sbuf);
+	closesocket(s);
+	s = INVALID_SOCKET;
+}
+
+
+void CSimManageClientDlg::OnBnClickedButton4()
+{
+	// TODO: 在此添加控件通知处理程序代码
+	OnBnClickedBtnLinkserver();
+	UpdateData();
+	int n = 0;
+	int m = 0;
+
+	sbuffer sbuf;
+	packer<sbuffer> msgPack(&sbuf);
+	sbuf.write("\xfb\xfc", 6);
+	msgPack.pack_array(5 + m_iCount);
+	msgPack.pack((int)CMD_SIM);
+	msgPack.pack((int)SIM_RETURNCARD_LEAD_IN);
+	msgPack.pack(m_iTag);
+	msgPack.pack(m_iCount);
+	msgPack.pack("123456789");
+	for (int i = 0; i < m_iCount; i++)
+	{
+		msgPack.pack_array(1);
+		CString strJrhm;
+		strJrhm.Format("jrhm_%d", ++n);
+		msgPack.pack(strJrhm.GetBuffer(0));
 	}
 
 	DealLast(sbuf);

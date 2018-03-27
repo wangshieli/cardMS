@@ -86,6 +86,7 @@ typedef enum
 	SIM_USECARD_LEAD_IN,		// 导入新卡分配后数据
 	SIM_CANCELDATA_LEAD_IN,		// 导入注销清单
 	SIM_RENEWDATE_LEAD_IN,		// 导入续费日期清单
+	SIM_RETURNCARD_LEAD_IN,		// 导入退卡清单
 }SUBCMD_SIM;
 
 
