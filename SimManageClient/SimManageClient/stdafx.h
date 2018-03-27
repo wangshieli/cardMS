@@ -83,10 +83,11 @@ typedef enum
 	SIM_START,					// 复机
 	SIM_STATE_UPDATE,			// 更新卡状态
 	SIM_NEWCARD_LEAD_IN,		// 导入新卡数据
-	SIM_USECARD_LEAD_IN,		// 导入新卡分配后数据
+	SIM_USECARD_LEAD_IN,		// 导入用户状态数据
 	SIM_CANCELDATA_LEAD_IN,		// 导入注销清单
 	SIM_RENEWDATE_LEAD_IN,		// 导入续费日期清单
 	SIM_RETURNCARD_LEAD_IN,		// 导入退卡清单
+	SIM_XSINFO_LEAD_IN,			// 导入消息清单
 }SUBCMD_SIM;
 
 

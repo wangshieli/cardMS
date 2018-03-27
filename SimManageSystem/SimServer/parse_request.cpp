@@ -22,9 +22,10 @@ void ErrorInfo(BUFFER_OBJ* bobj, const TCHAR* pErrorInfo)
 	int nCmd = 0xbb;
 	int nSubCmd = 0xbb;
 	sbuf.write("\xfb\xfc", 6);
-	msgPack.pack_array(3);
+	msgPack.pack_array(4);
 	msgPack.pack(nCmd);
 	msgPack.pack(nSubCmd);
+	msgPack.pack(0);
 	msgPack.pack(pErrorInfo);
 
 	DealLast(sbuf, bobj);

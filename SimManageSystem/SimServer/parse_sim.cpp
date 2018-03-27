@@ -81,12 +81,14 @@ bool DoTrans_NewCard_LeadIn(msgpack::object* pObj)
 		conptr = GetTransConnection();
 		_variant_t EffectedRecCount;
 		(*conptr)->BeginTrans();
-		int nCount = (pObj++)->as<int>();// 数据包中的元素个数
 		std::string llchm = (pObj++)->as<std::string>();
 		std::string llclx = (pObj++)->as<std::string>();
+		int nCount = (pObj)->via.array.size;
+		_tprintf(_T("%d\n"), nCount);
+		msgpack::object* pArray = (pObj++)->via.array.ptr;
 		for (int i = 0; i < nCount; i++)
 		{
-			msgpack::object* pSubObj = (pObj++)->via.array.ptr;
+			msgpack::object* pSubObj = (pArray++)->via.array.ptr;
 			std::string strJrhm = (pSubObj++)->as<std::string>();
 			std::string strIccid = (pSubObj++)->as<std::string>();
 			std::string strDxzh = (pSubObj++)->as<std::string>();
@@ -98,7 +100,7 @@ bool DoTrans_NewCard_LeadIn(msgpack::object* pObj)
 			if ((int)EffectedRecCount == 0 || (int)EffectedRecCount == 2)// 说明此条数据被忽略
 				++nIgnore;
 		}
-		if (nIgnore > 0)
+		if (nIgnore < nCount)
 		{
 			pSql = _T("update llc_tbl set zsl=zsl+%d,kysl=kysl+%d,xgsj=now() where llchm='%s'");
 			memset(sql, 0x00, sizeof(sql));
@@ -120,7 +122,7 @@ bool DoTrans_NewCard_LeadIn(msgpack::object* pObj)
 	return true;
 }
 
-// 用户卡清单处理
+// 用户状态清单处理
 bool DoTrans_UseCard_LeadIn(msgpack::object* pObj)
 {
 	_ConnectionPtr* conptr = NULL;
@@ -131,26 +133,20 @@ bool DoTrans_UseCard_LeadIn(msgpack::object* pObj)
 		conptr = GetTransConnection();
 		_variant_t EffectedRecCount;
 		(*conptr)->BeginTrans();
-		int nCount = (pObj++)->as<int>();// 数据包中的元素个数
-		std::string llchm = (pObj++)->as<std::string>();
+		int nCount = pObj->via.array.size;
+		msgpack::object* pArray = (pObj++)->via.array.ptr;
 		for (int i = 0; i < nCount; i++)
 		{
-			msgpack::object* pSubObj = (pObj++)->via.array.ptr;
+			msgpack::object* pSubObj = (pArray++)->via.array.ptr;
 			std::string strJrhm = (pSubObj++)->as<std::string>();
-			std::string strIccid = (pSubObj++)->as<std::string>();
-			std::string strUser= (pSubObj++)->as<std::string>();
 			std::string strKtrq = (pSubObj++)->as<std::string>();
 			std::string strZt = (pSubObj++)->as<std::string>();
 
-			pSql = _T("update sim_tbl set user='%s',ktrq='%s',zt='%s',dqrq=DATE_ADD(ktrq,INTERVAL 1 YEAR),tag=false where jrhm='%s'");
+			pSql = _T("update sim_tbl set ktrq='%s',zt='%s'where jrhm='%s'");
 			memset(sql, 0x00, sizeof(sql));
-			_stprintf_s(sql, 256, pSql, strUser.c_str(), strKtrq.c_str(), strZt.c_str(), strJrhm.c_str());
+			_stprintf_s(sql, 256, pSql, strKtrq.c_str(), strZt.c_str(), strJrhm.c_str());
 			(*conptr)->Execute(_bstr_t(sql), &EffectedRecCount, adCmdText);
 		}
-		pSql = _T("update llc_tbl set kysl=kysl-%d,xgsj=now() where llchm='%s'");
-		memset(sql, 0x00, sizeof(sql));
-		_stprintf_s(sql, 256, pSql, nCount, llchm.c_str());
-		(*conptr)->Execute(_bstr_t(sql), &EffectedRecCount, adCmdText);
 		(*conptr)->CommitTrans();
 	}
 	catch (_com_error e)
@@ -177,8 +173,8 @@ bool DoTrans_CancelData_LeadIn(msgpack::object* pObj)
 		conptr = GetTransConnection();
 		_variant_t EffectedRecCount;
 		(*conptr)->BeginTrans();
-		int nCount = (pObj++)->as<int>();// 数据包中的元素个数
-		std::string llchm = (pObj++)->as<std::string>();
+		int nCount = pObj->via.array.size;
+		msgpack::object* pArray = (pObj++)->via.array.ptr;
 		for (int i = 0; i < nCount; i++)
 		{
 			msgpack::object* pSubObj = (pObj++)->via.array.ptr;
@@ -217,8 +213,8 @@ bool DoTrans_RenewData_LeadIn(msgpack::object* pObj)
 		conptr = GetTransConnection();
 		_variant_t EffectedRecCount;
 		(*conptr)->BeginTrans();
-		int nCount = (pObj++)->as<int>();// 数据包中的元素个数
-		std::string llchm = (pObj++)->as<std::string>();
+		int nCount = pObj->via.array.size;
+		msgpack::object* pArray = (pObj++)->via.array.ptr;
 		for (int i = 0; i < nCount; i++)
 		{
 			msgpack::object* pSubObj = (pObj++)->via.array.ptr;
@@ -259,6 +255,7 @@ bool DoTrans_ReturnCard_LeadIn(msgpack::object* pObj)
 		(*conptr)->BeginTrans();
 		int nCount = (pObj++)->as<int>();// 数据包中的元素个数
 		std::string llchm = (pObj++)->as<std::string>();
+		std::string strKhmc = (pObj++)->as<std::string>();
 		for (int i = 0; i < nCount; i++)
 		{
 			msgpack::object* pSubObj = (pObj++)->via.array.ptr;
@@ -269,10 +266,60 @@ bool DoTrans_ReturnCard_LeadIn(msgpack::object* pObj)
 			_stprintf_s(sql, 256, pSql, strJrhm.c_str());
 			(*conptr)->Execute(_bstr_t(sql), &EffectedRecCount, adCmdText);
 		}
-		pSql = _T("update llc_tbl set kysl=kysl+%d,xgsj=now() where llchm='%s'");
+
+		pSql = _T("update llc_tbl llc, kh_tbl kh set llc.kysl=llc.kysl+%d,llc.xgsj=now(),kh.ksl=kh.ksl-%d,kh.xgrq=now()\
+where llc.llchm='%s' and kh.khmc='%s'");
 		memset(sql, 0x00, sizeof(sql));
-		_stprintf_s(sql, 256, pSql, nCount, llchm.c_str());
+		_stprintf_s(sql, 256, pSql, nCount, nCount, llchm.c_str(), strKhmc.c_str());
 		(*conptr)->Execute(_bstr_t(sql), &EffectedRecCount, adCmdText);
+
+		(*conptr)->CommitTrans();
+	}
+	catch (_com_error e)
+	{
+		_tprintf(_T("%s-%d:错误信息:%s 错误代码:%08lx 错误源:%s 错误描述:%s\n"), __FILE__, __LINE__, e.ErrorMessage(), e.Error(), (const TCHAR*)e.Source(), (const TCHAR*)e.Description());
+
+		(*conptr)->RollbackTrans();
+		PostThreadMessage(nThreadID, WM_RELEASE_DBLINK, (WPARAM)conptr, NULL);
+		return false;
+	}
+
+	PostThreadMessage(nThreadID, WM_RELEASE_DBLINK, (WPARAM)conptr, NULL);
+	return true;
+}
+
+bool DoTrans_XSCard_LeadIn(msgpack::object* pObj)
+{
+	_ConnectionPtr* conptr = NULL;
+	const TCHAR* pSql = NULL;
+	TCHAR sql[256];
+	try
+	{
+		conptr = GetTransConnection();
+		_variant_t EffectedRecCount;
+		(*conptr)->BeginTrans();
+		int nCount = (pObj++)->as<int>();// 数据包中的元素个数
+		std::string strKhmc = (pObj++)->as<std::string>();
+		for (int i = 0; i < nCount; i++)
+		{
+			msgpack::object* pSubObj = (pObj++)->via.array.ptr;
+			std::string strJrhm = (pSubObj++)->as<std::string>();
+			std::string strXsrq = (pSubObj++)->as<std::string>();
+			std::string strXsy= (pSubObj++)->as<std::string>();
+			std::string strBz = (pSubObj++)->as<std::string>();
+
+			pSql = _T("update sim_tbl sim, llc_tbl llc set sim.khmc='%s',sim.xsrq='%s',sim.xsy='%s',sim.bz='%s',\
+llc.kysl=llc.kysl-1 where sim.jrhm='%s' and llc.llchm=sim.llc");
+			memset(sql, 0x00, sizeof(sql));
+			_stprintf_s(sql, 256, pSql, strKhmc.c_str(), strXsrq.c_str(), strXsy.c_str(), strBz.c_str(), strJrhm.c_str());
+			(*conptr)->Execute(_bstr_t(sql), &EffectedRecCount, adCmdText);
+		}
+
+		pSql = _T("update kh_tbl set ksl=ksl+%d,xgrq=now() where khmc='%s'");
+		memset(sql, 0x00, sizeof(sql));
+		_stprintf_s(sql, 256, pSql, nCount, strKhmc.c_str());
+		(*conptr)->Execute(_bstr_t(sql), &EffectedRecCount, adCmdText);
+		
 		(*conptr)->CommitTrans();
 	}
 	catch (_com_error e)
@@ -297,7 +344,7 @@ bool doParseSim(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 
 	switch (nSubCmd)
 	{
-	case SIM_NEWCARD_LEAD_IN:// 导入新卡
+	case SIM_NEWCARD_LEAD_IN: // 导入新卡
 	{
 		_tprintf(_T("%d\n"), bobj->dwRecvedCount);
 		msgpack::sbuffer sbuf;
@@ -317,7 +364,7 @@ bool doParseSim(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 	}
 	break;
 
-	case SIM_USECARD_LEAD_IN:
+	case SIM_USECARD_LEAD_IN: // 导入用户状态
 	{
 		_tprintf(_T("%d\n"), bobj->dwRecvedCount);
 		msgpack::sbuffer sbuf;
@@ -337,7 +384,7 @@ bool doParseSim(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 	}
 	break;
 
-	case SIM_CANCELDATA_LEAD_IN:
+	case SIM_CANCELDATA_LEAD_IN: // 导入注销
 	{
 		msgpack::sbuffer sbuf;
 		msgpack::packer<msgpack::sbuffer> msgPack(&sbuf);
@@ -356,7 +403,7 @@ bool doParseSim(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 	}
 	break;
 
-	case SIM_RENEWDATE_LEAD_IN:
+	case SIM_RENEWDATE_LEAD_IN: // 导入续费
 	{
 		msgpack::sbuffer sbuf;
 		msgpack::packer<msgpack::sbuffer> msgPack(&sbuf);
@@ -375,7 +422,7 @@ bool doParseSim(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 	}
 	break;
 
-	case SIM_RETURNCARD_LEAD_IN:
+	case SIM_RETURNCARD_LEAD_IN: // 导入退卡
 	{
 		msgpack::sbuffer sbuf;
 		msgpack::packer<msgpack::sbuffer> msgPack(&sbuf);
@@ -393,6 +440,24 @@ bool doParseSim(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 		DealLast(sbuf, bobj);
 	}
 	break;
+
+	case SIM_XSINFO_LEAD_IN:
+	{
+		msgpack::sbuffer sbuf;
+		msgpack::packer<msgpack::sbuffer> msgPack(&sbuf);
+		sbuf.write("\xfb\xfc", 6);
+		int nTag = (pObj++)->as<int>();
+		if (!DoTrans_XSCard_LeadIn(pObj))
+		{
+			ReturnSimpleInfo(msgPack, nCmd, nSubCmd, 0, _T("失败"));
+		}
+		else
+		{
+			ReturnSimpleInfo(msgPack, nCmd, nSubCmd, 1, _T("success"));
+		}
+
+		DealLast(sbuf, bobj);
+	}
 
 	case SUBCMD_ADD:// 新卡直接分配给用户
 	{

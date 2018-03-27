@@ -85,6 +85,7 @@ BEGIN_MESSAGE_MAP(CSimManageClientDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BUTTON3, &CSimManageClientDlg::OnBnClickedButton3)
 	ON_BN_CLICKED(IDC_BUTTON1, &CSimManageClientDlg::OnBnClickedButton1)
 	ON_BN_CLICKED(IDC_BUTTON4, &CSimManageClientDlg::OnBnClickedButton4)
+	ON_BN_CLICKED(IDC_BUTTON5, &CSimManageClientDlg::OnBnClickedButton5)
 END_MESSAGE_MAP()
 
 
@@ -436,13 +437,13 @@ void CSimManageClientDlg::OnBnClickedBtnTest()
 	sbuffer sbuf;
 	packer<sbuffer> msgPack(&sbuf);
 	sbuf.write("\xfb\xfc", 6);
-	msgPack.pack_array(6 + m_iCount);
+	msgPack.pack_array(6);
 	msgPack.pack((int)CMD_SIM);
 	msgPack.pack((int)SIM_NEWCARD_LEAD_IN);
 	msgPack.pack(m_iTag);
-	msgPack.pack(m_iCount);
 	msgPack.pack("123456789");
 	msgPack.pack("后向");
+	msgPack.pack_array(m_iCount);
 	for (int i = 0; i < m_iCount; i++)
 	{
 		msgPack.pack_array(3);
@@ -493,23 +494,18 @@ void CSimManageClientDlg::OnBnClickedButton2()
 	sbuffer sbuf;
 	packer<sbuffer> msgPack(&sbuf);
 	sbuf.write("\xfb\xfc", 6);
-	msgPack.pack_array(5 + m_iCount);
+	msgPack.pack_array(4);
 	msgPack.pack((int)CMD_SIM);
 	msgPack.pack((int)SIM_USECARD_LEAD_IN);
 	msgPack.pack(m_iTag);
-	msgPack.pack(m_iCount);
-	msgPack.pack("123456789");
+	msgPack.pack_array(m_iCount);
 	for (int i = 0; i < m_iCount; i++)
 	{
-		msgPack.pack_array(5);
+		msgPack.pack_array(3);
 		CString strJrhm;
 		strJrhm.Format("jrhm_%d", ++n);
 		msgPack.pack(strJrhm.GetBuffer(0));
-		CString strIccid;
-		strIccid.Format("iccid_%d", ++m);
-		msgPack.pack(strIccid.GetBuffer(0));
-		msgPack.pack("何永利");
-		msgPack.pack("2018-03-26");
+		msgPack.pack("2018-03-26");// 开通日期
 		msgPack.pack("在用");
 	}
 
@@ -530,12 +526,11 @@ void CSimManageClientDlg::OnBnClickedButton3()
 	sbuffer sbuf;
 	packer<sbuffer> msgPack(&sbuf);
 	sbuf.write("\xfb\xfc", 6);
-	msgPack.pack_array(5 + m_iCount);
+	msgPack.pack_array(4);
 	msgPack.pack((int)CMD_SIM);
 	msgPack.pack((int)SIM_CANCELDATA_LEAD_IN);
 	msgPack.pack(m_iTag);
-	msgPack.pack(m_iCount);
-	msgPack.pack("123456789");
+	msgPack.pack_array(m_iCount);
 	for (int i = 0; i < m_iCount; i++)
 	{
 		msgPack.pack_array(3);
@@ -563,12 +558,11 @@ void CSimManageClientDlg::OnBnClickedButton1()
 	sbuffer sbuf;
 	packer<sbuffer> msgPack(&sbuf);
 	sbuf.write("\xfb\xfc", 6);
-	msgPack.pack_array(5 + m_iCount);
+	msgPack.pack_array(4);
 	msgPack.pack((int)CMD_SIM);
 	msgPack.pack((int)SIM_RENEWDATE_LEAD_IN);
 	msgPack.pack(m_iTag);
-	msgPack.pack(m_iCount);
-	msgPack.pack("123456789");
+	msgPack.pack_array(m_iCount);
 	for (int i = 0; i < m_iCount; i++)
 	{
 		msgPack.pack_array(3);
@@ -596,18 +590,54 @@ void CSimManageClientDlg::OnBnClickedButton4()
 	sbuffer sbuf;
 	packer<sbuffer> msgPack(&sbuf);
 	sbuf.write("\xfb\xfc", 6);
-	msgPack.pack_array(5 + m_iCount);
+	msgPack.pack_array(6 + m_iCount);
 	msgPack.pack((int)CMD_SIM);
 	msgPack.pack((int)SIM_RETURNCARD_LEAD_IN);
 	msgPack.pack(m_iTag);
 	msgPack.pack(m_iCount);
 	msgPack.pack("123456789");
+	msgPack.pack("客户01");
 	for (int i = 0; i < m_iCount; i++)
 	{
 		msgPack.pack_array(1);
 		CString strJrhm;
 		strJrhm.Format("jrhm_%d", ++n);
+		msgPack.pack(strJrhm.GetBuffer(0));	
+	}
+
+	DealLast(sbuf);
+	closesocket(s);
+	s = INVALID_SOCKET;
+}
+
+
+void CSimManageClientDlg::OnBnClickedButton5()
+{
+	// TODO: 在此添加控件通知处理程序代码
+	OnBnClickedBtnLinkserver();
+	UpdateData();
+	int n = 0;
+	int m = 0;
+
+	sbuffer sbuf;
+	packer<sbuffer> msgPack(&sbuf);
+	sbuf.write("\xfb\xfc", 6);
+	msgPack.pack_array(5 + m_iCount);
+	msgPack.pack((int)CMD_SIM);
+	msgPack.pack((int)SIM_XSINFO_LEAD_IN);
+	msgPack.pack(m_iTag);
+	msgPack.pack(m_iCount);
+	msgPack.pack("客户01");
+	for (int i = 0; i < m_iCount; i++)
+	{
+		msgPack.pack_array(4);
+		CString strJrhm;
+		strJrhm.Format("jrhm_%d", ++n);
 		msgPack.pack(strJrhm.GetBuffer(0));
+		//msgPack.pack(1000);// 拿卡数量
+		msgPack.pack("2019-03-27");// 销售日期
+		msgPack.pack("销售员");
+		msgPack.pack("备注");
 	}
 
 	DealLast(sbuf);
