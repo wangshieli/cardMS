@@ -52,7 +52,8 @@ typedef enum
 	CMD_KHJL,			// 客户经理表
 	CMD_LLC,			// 流量池表
 	CMD_LLTC,			// 流量套餐表
-	CMD_SSDQ			// 所属地区表
+	CMD_SSDQ,			// 所属地区表
+	CMD_IMPORT,			// 数据导入
 }CMD_MSG;
 
 // 通用子命令
@@ -63,6 +64,16 @@ typedef enum
 	SUBCMD_SELECT_BY_KEY,	// 使用指定主键信息查询
 	SUBCMD_SELECT_BY_TAG	// 按此批量查询
 }SUBCMD_MSG;
+
+typedef enum
+{
+	SUBCMD_IMPORT_NEWCARD = 0X01,
+	SUBCMD_IMPORT_SALENOTE,
+	SUBCMD_IMPORT_KHSTATE,
+	SUBCMD_IMPORT_PAYLIST,
+	SUBCMD_IMPORT_CARDRETURNED,
+	SUBCMD_IMPORT_CARDCANCEL,
+}SUBCMD_IMPORT;
 
 typedef enum
 {
@@ -82,12 +93,6 @@ typedef enum
 	SIM_STOP,					// 停机
 	SIM_START,					// 复机
 	SIM_STATE_UPDATE,			// 更新卡状态
-	SIM_NEWCARD_LEAD_IN,		// 导入新卡数据
-	SIM_USECARD_LEAD_IN,		// 导入用户状态数据
-	SIM_CANCELDATA_LEAD_IN,		// 导入注销清单
-	SIM_RENEWDATE_LEAD_IN,		// 导入续费日期清单
-	SIM_RETURNCARD_LEAD_IN,		// 导入退卡清单
-	SIM_XSINFO_LEAD_IN,			// 导入消息清单
 }SUBCMD_SIM;
 
 

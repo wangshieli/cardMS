@@ -276,8 +276,7 @@ void CSimManageClientDlg::DealLast(msgpack::sbuffer& sBuf)
 		int cmd = (pObj++)->as<int>();
 		int subcmd = (pObj++)->as<int>();
 		int res = (pObj++)->as<int>();
-		std::string result = (pObj++)->as<std::string>();
-		strErr.Format(_T("[%d,%d,%d,%s]"), cmd, subcmd, res, result.c_str());
+		strErr.Format(_T("[%d,%d,%d]"), cmd, subcmd, res);
 		MessageBox(strErr);
 	}
 	catch (...)
@@ -296,7 +295,7 @@ void CSimManageClientDlg::OnBnClickedBtnLinkserver()
 	struct sockaddr_in sAddr;
 	ZeroMemory(&sAddr, sizeof(sAddr));
 	sAddr.sin_family = AF_INET;
-	sAddr.sin_port = htons(6086);
+	sAddr.sin_port = htons(6088);
 	sAddr.sin_addr.S_un.S_addr = inet_addr("127.0.0.1");
 	if (SOCKET_ERROR == connect(s, (sockaddr*)&sAddr, sizeof(sAddr)))
 	{
@@ -438,8 +437,8 @@ void CSimManageClientDlg::OnBnClickedBtnTest()
 	packer<sbuffer> msgPack(&sbuf);
 	sbuf.write("\xfb\xfc", 6);
 	msgPack.pack_array(6);
-	msgPack.pack((int)CMD_SIM);
-	msgPack.pack((int)SIM_NEWCARD_LEAD_IN);
+	msgPack.pack((int)CMD_IMPORT);
+	msgPack.pack((int)SUBCMD_IMPORT_NEWCARD);
 	msgPack.pack(m_iTag);
 	msgPack.pack("123456789");
 	msgPack.pack("后向");
@@ -495,8 +494,8 @@ void CSimManageClientDlg::OnBnClickedButton2()
 	packer<sbuffer> msgPack(&sbuf);
 	sbuf.write("\xfb\xfc", 6);
 	msgPack.pack_array(4);
-	msgPack.pack((int)CMD_SIM);
-	msgPack.pack((int)SIM_USECARD_LEAD_IN);
+	msgPack.pack((int)CMD_IMPORT);
+	msgPack.pack((int)SUBCMD_IMPORT_KHSTATE);
 	msgPack.pack(m_iTag);
 	msgPack.pack_array(m_iCount);
 	for (int i = 0; i < m_iCount; i++)
@@ -527,8 +526,8 @@ void CSimManageClientDlg::OnBnClickedButton3()
 	packer<sbuffer> msgPack(&sbuf);
 	sbuf.write("\xfb\xfc", 6);
 	msgPack.pack_array(4);
-	msgPack.pack((int)CMD_SIM);
-	msgPack.pack((int)SIM_CANCELDATA_LEAD_IN);
+	msgPack.pack((int)CMD_IMPORT);
+	msgPack.pack((int)SUBCMD_IMPORT_CARDCANCEL);
 	msgPack.pack(m_iTag);
 	msgPack.pack_array(m_iCount);
 	for (int i = 0; i < m_iCount; i++)
@@ -559,8 +558,8 @@ void CSimManageClientDlg::OnBnClickedButton1()
 	packer<sbuffer> msgPack(&sbuf);
 	sbuf.write("\xfb\xfc", 6);
 	msgPack.pack_array(4);
-	msgPack.pack((int)CMD_SIM);
-	msgPack.pack((int)SIM_RENEWDATE_LEAD_IN);
+	msgPack.pack((int)CMD_IMPORT);
+	msgPack.pack((int)SUBCMD_IMPORT_PAYLIST);
 	msgPack.pack(m_iTag);
 	msgPack.pack_array(m_iCount);
 	for (int i = 0; i < m_iCount; i++)
@@ -590,13 +589,12 @@ void CSimManageClientDlg::OnBnClickedButton4()
 	sbuffer sbuf;
 	packer<sbuffer> msgPack(&sbuf);
 	sbuf.write("\xfb\xfc", 6);
-	msgPack.pack_array(6 + m_iCount);
-	msgPack.pack((int)CMD_SIM);
-	msgPack.pack((int)SIM_RETURNCARD_LEAD_IN);
+	msgPack.pack_array(5);
+	msgPack.pack((int)CMD_IMPORT);
+	msgPack.pack((int)SUBCMD_IMPORT_CARDRETURNED);
 	msgPack.pack(m_iTag);
-	msgPack.pack(m_iCount);
-	msgPack.pack("123456789");
 	msgPack.pack("客户01");
+	msgPack.pack_array(m_iCount);
 	for (int i = 0; i < m_iCount; i++)
 	{
 		msgPack.pack_array(1);
@@ -622,12 +620,12 @@ void CSimManageClientDlg::OnBnClickedButton5()
 	sbuffer sbuf;
 	packer<sbuffer> msgPack(&sbuf);
 	sbuf.write("\xfb\xfc", 6);
-	msgPack.pack_array(5 + m_iCount);
-	msgPack.pack((int)CMD_SIM);
-	msgPack.pack((int)SIM_XSINFO_LEAD_IN);
+	msgPack.pack_array(5);
+	msgPack.pack((int)CMD_IMPORT);
+	msgPack.pack((int)SUBCMD_IMPORT_SALENOTE);
 	msgPack.pack(m_iTag);
-	msgPack.pack(m_iCount);
 	msgPack.pack("客户01");
+	msgPack.pack_array(m_iCount);
 	for (int i = 0; i < m_iCount; i++)
 	{
 		msgPack.pack_array(4);

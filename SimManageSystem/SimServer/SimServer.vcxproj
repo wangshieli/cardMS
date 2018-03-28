@@ -153,6 +153,7 @@
     <ClInclude Include="db_operation.h" />
     <ClInclude Include="objPool.h" />
     <ClInclude Include="parse_data.h" />
+    <ClInclude Include="parse_import.h" />
     <ClInclude Include="parse_kh.h" />
     <ClInclude Include="parse_khjl.h" />
     <ClInclude Include="parse_llc.h" />
@@ -171,6 +172,7 @@
     <ClCompile Include="db_operation.cpp" />
     <ClCompile Include="objPool.cpp" />
     <ClCompile Include="parse_data.cpp" />
+    <ClCompile Include="parse_import.cpp" />
     <ClCompile Include="parse_kh.cpp" />
     <ClCompile Include="parse_khjl.cpp" />
     <ClCompile Include="parse_llc.cpp" />

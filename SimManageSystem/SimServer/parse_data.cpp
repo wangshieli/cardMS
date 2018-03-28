@@ -169,26 +169,25 @@ void AddYYYYMMDD(const _variant_t& var, msgpack::packer<msgpack::sbuffer>& msgPa
 	}
 }
 
-void ReturnSimpleInfo(msgpack::packer<msgpack::sbuffer>& msgPack, int nCmd, int nSubCmd, int nSuccess, const TCHAR* pErrInfo)
+void ReturnSimpleInfo(msgpack::packer<msgpack::sbuffer>& msgPack, int nCmd, int nSubCmd, int nSuccess)
 {
-	msgPack.pack_array(4);
+	msgPack.pack_array(3);
 	msgPack.pack(nCmd);
 	msgPack.pack(nSubCmd);
 	msgPack.pack(nSuccess);
-	msgPack.pack(pErrInfo);
 }
 
 bool GetRecordSetDate(const TCHAR* sql, _RecordsetPtr& pRecord, int nCmd, int nSubCmd, msgpack::packer<msgpack::sbuffer>& msgPack)
 {
 	if (!GetRecordSet(sql, pRecord, adCmdText, true))
 	{
-		ReturnSimpleInfo(msgPack, nCmd, nSubCmd, 0, _T("Ê§°Ü"));
+		ReturnSimpleInfo(msgPack, nCmd, nSubCmd, 1);
 		ReleaseRecordset(pRecord);
 		return false;
 	}
 	if (pRecord->adoEOF)
 	{
-		ReturnSimpleInfo(msgPack, nCmd, nSubCmd, 0, _T("Ê§°Ü"));
+		ReturnSimpleInfo(msgPack, nCmd, nSubCmd, 1);
 		ReleaseRecordset(pRecord);
 		return false;
 	}
@@ -200,13 +199,13 @@ bool GetRecordSetDate(const TCHAR* sql, _RecordsetPtr& pRecord, int nCmd, int nS
 {
 	if (!GetRecordSet(sql, pRecord, adCmdText, true))
 	{
-		ReturnSimpleInfo(msgPack, nCmd, nSubCmd, 0, _T("Ê§°Ü"));
+		ReturnSimpleInfo(msgPack, nCmd, nSubCmd, 1);
 		ReleaseRecordset(pRecord);
 		return false;
 	}
 	if (!pRecord->adoEOF)
 	{
-		ReturnSimpleInfo(msgPack, nCmd, nSubCmd, 0, _T("Ê§°Ü"));
+		ReturnSimpleInfo(msgPack, nCmd, nSubCmd, 1);
 		ReleaseRecordset(pRecord);
 		return false;
 	}
@@ -218,11 +217,11 @@ void CheckSqlResult(const TCHAR* sql, int nCmd, int nSubCmd, msgpack::packer<msg
 {
 	if (!ExcuteSql(sql, true))
 	{
-		ReturnSimpleInfo(msgPack, nCmd, nSubCmd, 0, _T("Ê§°Ü"));
+		ReturnSimpleInfo(msgPack, nCmd, nSubCmd,1);
 	}
 	else
 	{
-		ReturnSimpleInfo(msgPack, nCmd, nSubCmd, 1, _T("success"));
+		ReturnSimpleInfo(msgPack, nCmd, nSubCmd, 0);
 	}
 }
 

@@ -14,6 +14,7 @@
 #include "parse_llc.h"
 #include "parse_lltc.h"
 #include "parse_ssdq.h"
+#include "parse_import.h"
 
 void ErrorInfo(BUFFER_OBJ* bobj, const TCHAR* pErrorInfo)
 {
@@ -122,6 +123,11 @@ bool doParseData(BUFFER_OBJ* bobj)
 			bRtn = doParseSsdq(result_, bobj);
 		}
 		break;
+
+		case CMD_IMPORT:
+		{
+			bRtn = doParseImport(result_, bobj);
+		}
 
 		default:
 			ErrorInfo(bobj, _T("Î´ÖªÃüÁî\n"));
