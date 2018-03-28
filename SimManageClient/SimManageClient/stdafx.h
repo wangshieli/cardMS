@@ -56,6 +56,14 @@ typedef enum
 	CMD_IMPORT,			// 数据导入
 }CMD_MSG;
 
+typedef enum
+{
+	SUBCMD_KH_ADD = 0X01,	// 增加客户
+	SUBCMD_KH_GET_01,		// 通过用户名查询客户
+	SUBCMD_KH_GET_02,		// 批量查询客户
+	SUBCMD_KH_MODIFY,		// 修改客户信息
+}SUBCMD_KH;
+
 // 通用子命令
 typedef enum
 {

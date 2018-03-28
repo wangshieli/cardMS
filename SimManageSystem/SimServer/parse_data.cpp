@@ -177,6 +177,15 @@ void ReturnSimpleInfo(msgpack::packer<msgpack::sbuffer>& msgPack, int nCmd, int 
 	msgPack.pack(nSuccess);
 }
 
+void ReturnSimpleInfo(msgpack::packer<msgpack::sbuffer>& msgPack, int nCmd, int nSubCmd, int nTag, int nSuccess)
+{
+	msgPack.pack_array(4);
+	msgPack.pack(nCmd);
+	msgPack.pack(nSubCmd);
+	msgPack.pack(nTag);
+	msgPack.pack(nSuccess);
+}
+
 bool GetRecordSetDate(const TCHAR* sql, _RecordsetPtr& pRecord, int nCmd, int nSubCmd, msgpack::packer<msgpack::sbuffer>& msgPack)
 {
 	if (!GetRecordSet(sql, pRecord, adCmdText, true))

@@ -86,6 +86,10 @@ BEGIN_MESSAGE_MAP(CSimManageClientDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BUTTON1, &CSimManageClientDlg::OnBnClickedButton1)
 	ON_BN_CLICKED(IDC_BUTTON4, &CSimManageClientDlg::OnBnClickedButton4)
 	ON_BN_CLICKED(IDC_BUTTON5, &CSimManageClientDlg::OnBnClickedButton5)
+	ON_BN_CLICKED(IDC_BUTTON6, &CSimManageClientDlg::OnBnClickedButton6)
+	ON_BN_CLICKED(IDC_BUTTON7, &CSimManageClientDlg::OnBnClickedButton7)
+	ON_BN_CLICKED(IDC_BUTTON8, &CSimManageClientDlg::OnBnClickedButton8)
+	ON_BN_CLICKED(IDC_BUTTON9, &CSimManageClientDlg::OnBnClickedButton9)
 END_MESSAGE_MAP()
 
 
@@ -637,6 +641,114 @@ void CSimManageClientDlg::OnBnClickedButton5()
 		msgPack.pack("销售员");
 		msgPack.pack("备注");
 	}
+
+	DealLast(sbuf);
+	closesocket(s);
+	s = INVALID_SOCKET;
+}
+
+
+void CSimManageClientDlg::OnBnClickedButton6()
+{
+	// TODO: 在此添加控件通知处理程序代码
+	OnBnClickedBtnLinkserver();
+	UpdateData();
+	int n = 0;
+	int m = 0;
+
+	sbuffer sbuf;
+	packer<sbuffer> msgPack(&sbuf);
+	sbuf.write("\xfb\xfc", 6);
+	msgPack.pack_array(3);
+	msgPack.pack((int)CMD_KH);
+	msgPack.pack((int)SUBCMD_KH_ADD);
+	msgPack.pack_array(m_iCount);
+	for (int i = 0; i < m_iCount; i++)
+	{
+		msgPack.pack_array(4);
+		CString strKhmc;
+		strKhmc.Format("khmc_%d", ++n);
+		msgPack.pack(strKhmc.GetBuffer(0));
+		CString strLxfs;
+		strLxfs.Format("lxfs_%d", ++n);
+		msgPack.pack(strLxfs.GetBuffer(0));
+		CString strKhjl;
+		strKhjl.Format("khjl_%d", ++n);
+		msgPack.pack(strKhjl.GetBuffer(0));
+		CString strBz;
+		strBz.Format("bz_%d", ++n);
+		msgPack.pack(strBz.GetBuffer(0));
+	}
+
+	DealLast(sbuf);
+	closesocket(s);
+	s = INVALID_SOCKET;
+}
+
+
+void CSimManageClientDlg::OnBnClickedButton7()
+{
+	// TODO: 在此添加控件通知处理程序代码
+	OnBnClickedBtnLinkserver();
+	UpdateData();
+	int n = 0;
+	int m = 0;
+
+	sbuffer sbuf;
+	packer<sbuffer> msgPack(&sbuf);
+	sbuf.write("\xfb\xfc", 6);
+	msgPack.pack_array(3);
+	msgPack.pack((int)CMD_KH);
+	msgPack.pack((int)SUBCMD_KH_GET_01);
+	msgPack.pack(m_strUsername.GetBuffer(0));
+
+	DealLast(sbuf);
+	closesocket(s);
+	s = INVALID_SOCKET;
+}
+
+
+void CSimManageClientDlg::OnBnClickedButton8()
+{
+	// TODO: 在此添加控件通知处理程序代码
+	OnBnClickedBtnLinkserver();
+	UpdateData();
+	int n = 0;
+	int m = 0;
+
+	sbuffer sbuf;
+	packer<sbuffer> msgPack(&sbuf);
+	sbuf.write("\xfb\xfc", 6);
+	msgPack.pack_array(3);
+	msgPack.pack((int)CMD_KH);
+	msgPack.pack((int)SUBCMD_KH_GET_02);
+	msgPack.pack(m_iTag);
+
+	DealLast(sbuf);
+	closesocket(s);
+	s = INVALID_SOCKET;
+}
+
+
+void CSimManageClientDlg::OnBnClickedButton9()
+{
+	// TODO: 在此添加控件通知处理程序代码
+	OnBnClickedBtnLinkserver();
+	UpdateData();
+	int n = 0;
+	int m = 0;
+
+	sbuffer sbuf;
+	packer<sbuffer> msgPack(&sbuf);
+	sbuf.write("\xfb\xfc", 6);
+	msgPack.pack_array(7);
+	msgPack.pack((int)CMD_KH);
+	msgPack.pack((int)SUBCMD_KH_MODIFY);
+	msgPack.pack(14);
+	msgPack.pack("test456");
+	msgPack.pack("18518253625");
+	msgPack.pack("埃及阿尤");
+	msgPack.pack("测试修改用户新信息");
 
 	DealLast(sbuf);
 	closesocket(s);

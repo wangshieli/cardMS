@@ -29,7 +29,7 @@ void ReturnSimInfo(_RecordsetPtr& pRecord, msgpack::packer<msgpack::sbuffer>& ms
 		_variant_t varLlc= pRecord->GetCollect("llc");
 		AddData(varLlc, msgPack);
 
-		_variant_t varLlclx = pRecord->GetCollect("lx");
+		_variant_t varLlclx = pRecord->GetCollect("llclx");
 		AddData(varLlclx, msgPack);
 
 		_variant_t varLltc = pRecord->GetCollect("lltc");
@@ -69,6 +69,8 @@ void ReturnSimInfo(_RecordsetPtr& pRecord, msgpack::packer<msgpack::sbuffer>& ms
 	ReleaseRecordset(pRecord);
 }
 
+bool DoTrans_SimAdd(msgpack::object* pObj);
+
 bool doParseSim(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 {
 	int nCmd = CMD_SIM;
@@ -78,92 +80,39 @@ bool doParseSim(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 
 	switch (nSubCmd)
 	{
-	case SUBCMD_ADD:// 新卡直接分配给用户
+	case SUBCMD_SIM_ADD:
 	{
+		msgpack::sbuffer sbuf;
+		msgpack::packer<msgpack::sbuffer> msgPack(&sbuf);
+		sbuf.write("\xfb\xfc", 6);
+
+		if (!DoTrans_SimAdd(pObj))
+		{
+			ReturnSimpleInfo(msgPack, nCmd, nSubCmd, 1);
+		}
+		else
+		{
+			ReturnSimpleInfo(msgPack, nCmd, nSubCmd, 0);
+		}
+
+		DealLast(sbuf, bobj);
+	}
+	break;
+
+	case SUBCMD_SIM_GET_01:
+	{
+		msgpack::sbuffer sbuf;
+		msgpack::packer<msgpack::sbuffer> msgPack(&sbuf);
+		sbuf.write("\xfb\xfc", 6);
+
 		std::string strJrhm = (pObj++)->as<std::string>();
-		std::string strIccid = (pObj++)->as<std::string>();
-		std::string strDxzh = (pObj++)->as<std::string>();
-		std::string strLlc = (pObj++)->as<std::string>();
 
-		msgpack::sbuffer sbuf;
-		msgpack::packer<msgpack::sbuffer> msgPack(&sbuf);
-		sbuf.write("\xfb\xfc", 6);
-
-		//const TCHAR* pSql = _T("insert into sim_tbl (id,jrhm,iccid,dxzh,llc) value(null,'%s','%s','%s','%s')");
-		//TCHAR sql[256];
-		//TCHAR sql_u[256];
-		//memset(sql, 0x00, sizeof(sql));
-		//memset(sql_u, 0x00, sizeof(sql_u));
-		//_stprintf_s(sql, 256, pSql, strJrhm.c_str(), strIccid.c_str(), strDxzh.c_str(), strLlc.c_str());
-		//_stprintf_s(sql_u, 256, _T("update llc_tbl set ksl=ksl+1 where dm='%s'"), strLlc.c_str());
-		//if (!DoTrans(2, sql, sql_u))
-		//{
-		//	// 失败
-		//}
-		//else
-		//{
-		//	// 成功
-		//}
-
-		const TCHAR* pSql = _T("insert into sim_tbl (id,jrhm,iccid,dxzh,llc,tag) value(null,'%s','%s','%s','%s',false) \
-ON DUPLICATE KEY UPDATE tag=false");
-		TCHAR sql[256];
-		memset(sql, 0x00, sizeof(sql));
-		_stprintf_s(sql, 256, pSql, strJrhm.c_str(), strIccid.c_str(),strDxzh.c_str(),strLlc.c_str());
-		CheckSqlResult(sql, nCmd, nSubCmd, msgPack);
-
-		DealLast(sbuf, bobj);
-	}
-	break;
-
-	case SUBCMD_MODIFY:
-	{
-		std::string strOsim = (pObj++)->as<std::string>();
-		std::string strNsim = (pObj++)->as<std::string>();
-		std::string strIccid = (pObj++)->as<std::string>();
-		std::string strDxzh = (pObj++)->as<std::string>();
-		std::string strJhrq = (pObj++)->as<std::string>();
-		std::string strZt = (pObj++)->as<std::string>();
-		std::string strSsdq = (pObj++)->as<std::string>();
-		std::string strLltc = (pObj++)->as<std::string>();
-		std::string strLlc = (pObj++)->as<std::string>();
-		std::string strKh = (pObj++)->as<std::string>();
-		std::string strKhjl = (pObj++)->as<std::string>();
-		std::string strXsrq = (pObj++)->as<std::string>();
-		std::string strDqrq = (pObj++)->as<std::string>();
-		std::string strXfrq = (pObj++)->as<std::string>();
-		std::string strZxrq = (pObj++)->as<std::string>();
-		double dDj = (pObj++)->as<double>();
-
-		msgpack::sbuffer sbuf;
-		msgpack::packer<msgpack::sbuffer> msgPack(&sbuf);
-		sbuf.write("\xfb\xfc", 6);
-
-		const TCHAR* pSql = _T("update sim_tbl set zt='%s',kh='%s',khjl='%s',ssdq='%s',lltc='%s',dj='%s',jhrq='%s',dqrq='%s' where jrhm = '%s'");
-		TCHAR sql[512];
-		memset(sql, 0x00, sizeof(sql));
-		_stprintf_s(sql, 512, pSql, strNsim.c_str(), strIccid.c_str(), strDxzh.c_str(), strZt.c_str(), strKh.c_str(), strKhjl.c_str(), strLlc.c_str(), strDqrq.c_str(), strXsrq.c_str(), strXfrq.c_str(),
-			strJhrq.c_str(), strZxrq.c_str(), dDj, strSsdq.c_str(), strLltc.c_str(), strOsim.c_str());
-		CheckSqlResult(sql, nCmd, nSubCmd, msgPack);
-
-		DealLast(sbuf, bobj);
-	}
-	break;
-
-	case SUBCMD_SELECT_BY_KEY:// 使用接入号码查sim
-	{
-		std::string strSim = (pObj++)->as<std::string>();
-
-		msgpack::sbuffer sbuf;
-		msgpack::packer<msgpack::sbuffer> msgPack(&sbuf);
-		sbuf.write("\xfb\xfc", 6);
 		_RecordsetPtr pRecord;
 
-		const TCHAR* pSql = _T("select a.*,b.lx from sim_tbl as a, llc_tbl as b where a.jrhm='%s' and a.llc=b.dm");
-		//const TCHAR* pSql = _T("select * from sim_tbl where jrhm = '%s'");
+		const TCHAR* pSql = _T("select a.*,b.llclx from sim_tbl as a, llc_tbl as b where a.jrhm='%s' and b.llchm=a.llc");
 		TCHAR sql[256];
 		memset(sql, 0x00, 256);
-		_stprintf_s(sql, 256, pSql, strSim.c_str());
+		_stprintf_s(sql, 256, pSql, strJrhm.c_str());
 		if (!GetRecordSetDate(sql, pRecord, nCmd, nSubCmd, msgPack))
 		{
 			DealLast(sbuf, bobj);
@@ -171,33 +120,33 @@ ON DUPLICATE KEY UPDATE tag=false");
 		}
 
 		int lRstCount = pRecord->GetRecordCount();
-		msgPack.pack_array(4 + lRstCount);
+		msgPack.pack_array(4);
 		msgPack.pack(nCmd);
 		msgPack.pack(nSubCmd);
-		msgPack.pack(1);
-		msgPack.pack(_T("success"));
+		msgPack.pack(0);
+		msgPack.pack_array(lRstCount);
 
 		ReturnSimInfo(pRecord, msgPack);
 		DealLast(sbuf, bobj);
 	}
 	break;
 
-	case SUBCMD_SELECT_BY_TAG:// 根据tag返回一定数量的卡信息
+	case SUBCMD_SIM_GET_02:
 	{
 		int nTag = (pObj++)->as<int>();
-		int nStart = 200 * (nTag - 1) + 1;
-		int nEnd = 200 * nTag;
+		int nStart = 200 * (nTag - 1);
+		//int nEnd = 200 * nTag;
 
 		msgpack::sbuffer sbuf;
 		msgpack::packer<msgpack::sbuffer> msgPack(&sbuf);
 		sbuf.write("\xfb\xfc", 6);
 		_RecordsetPtr pRecord;
 
-		const TCHAR* pSql = _T("select a.*,b.lx from sim_tbl as a, llc_tbl as b where a.id between %d and %d and a.llc=b.dm");
-		//const TCHAR* pSql = _T("select * from sim_tbl where id  between %d and %d");// 主键范围
+		//const TCHAR* pSql = _T("select a.*,b.llclx from sim_tbl as a, llc_tbl as b limit %d,200 and where b.llcdm=a.llc");
+		const TCHAR* pSql = _T("select a.*,b.llclx from (select * from sim_tbl limit %d,200) a left join llc_tbl b on b.llchm=a.llc");
 		TCHAR sql[256];
 		memset(sql, 0x00, 256);
-		_stprintf_s(sql, 256, pSql, nStart, nEnd);
+		_stprintf_s(sql, 256, pSql, nStart);
 		if (!GetRecordSetDate(sql, pRecord, nCmd, nSubCmd, msgPack))
 		{
 			DealLast(sbuf, bobj);
@@ -205,48 +154,44 @@ ON DUPLICATE KEY UPDATE tag=false");
 		}
 
 		long lRstCount = pRecord->GetRecordCount();
-		msgPack.pack_array(4 + lRstCount);
+		msgPack.pack_array(5);
 		msgPack.pack(nCmd);
 		msgPack.pack(nSubCmd);
-		msgPack.pack(1);
-		msgPack.pack(_T("success"));
+		msgPack.pack(0);
+		msgPack.pack(nTag);
+		msgPack.pack_array(lRstCount);
 
 		ReturnSimInfo(pRecord, msgPack);
 		DealLast(sbuf, bobj);
 	}
 	break;
 
-	case SIM_SELECT_BY_ICCIC:
-	{}
-	break;
-
-	case SIM_SELECT_BY_KH:
+	case SUBCMD_SIM_GET_03:
 	{
-		int nTag = (pObj++)->as<int>();
-		std::string strUser = (pObj++)->as<std::string>();
-		int nStart = 200 * (nTag - 1) + 1;
-		int nEnd = 200 * nTag;
-
 		msgpack::sbuffer sbuf;
 		msgpack::packer<msgpack::sbuffer> msgPack(&sbuf);
 		sbuf.write("\xfb\xfc", 6);
+
+		std::string strIccid = (pObj++)->as<std::string>();
+
 		_RecordsetPtr pRecord;
 
-		const TCHAR* pSql = _T("select * from sim_tbl where user = '%s' and id between %d and %d");
+		const TCHAR* pSql = _T("select a.*,b.llclx from sim_tbl as a, llc_tbl as b where a.iccid='%s' and b.llchm=a.llc");
 		TCHAR sql[256];
-		memset(sql, 0x00, sizeof(sql));
+		memset(sql, 0x00, 256);
+		_stprintf_s(sql, 256, pSql, strIccid.c_str());
 		if (!GetRecordSetDate(sql, pRecord, nCmd, nSubCmd, msgPack))
 		{
 			DealLast(sbuf, bobj);
 			return false;
 		}
 
-		long lRstCount = pRecord->GetRecordCount();
-		msgPack.pack_array(4 + lRstCount);
+		int lRstCount = pRecord->GetRecordCount();
+		msgPack.pack_array(4);
 		msgPack.pack(nCmd);
 		msgPack.pack(nSubCmd);
-		msgPack.pack(1);
-		msgPack.pack(_T("成功"));
+		msgPack.pack(0);
+		msgPack.pack_array(lRstCount);
 
 		ReturnSimInfo(pRecord, msgPack);
 		DealLast(sbuf, bobj);
@@ -273,5 +218,53 @@ ON DUPLICATE KEY UPDATE tag=false");
 	default:
 		break;
 	}
+	return true;
+}
+
+bool DoTrans_SimAdd(msgpack::object* pObj)
+{
+	_ConnectionPtr* conptr = NULL;
+	const TCHAR* pSql = NULL;
+	TCHAR sql[256];
+	int nIgnore = 0;
+	try
+	{
+		conptr = GetTransConnection();
+		_variant_t EffectedRecCount;
+		(*conptr)->BeginTrans();
+
+		std::string strJrhm = (pObj++)->as<std::string>();
+		std::string strIccid = (pObj++)->as<std::string>();
+		std::string strDxzh = (pObj++)->as<std::string>();
+		std::string strLlc = (pObj++)->as<std::string>();
+
+		pSql = _T("insert into sim_tbl (id,jrhm,iccid,dxzh,llc,tag) value(null,'%s','%s','%s','%s',true) ON DUPLICATE KEY UPDATE iccid='%s'");
+
+		memset(sql, 0x00, sizeof(sql));
+		_stprintf_s(sql, 256, pSql, strJrhm.c_str(), strIccid.c_str(), strDxzh.c_str(), strLlc.c_str(), strIccid.c_str());
+		(*conptr)->Execute(_bstr_t(sql), &EffectedRecCount, adCmdText);
+		if ((int)EffectedRecCount == 0 || (int)EffectedRecCount == 2)// 说明此条数据被忽略
+			++nIgnore;
+
+		if (nIgnore < 1)
+		{
+			pSql = _T("update llc_tbl set zsl=zsl+1,kysl=kysl+1,xgsj=now() where llchm='%s'");
+			memset(sql, 0x00, sizeof(sql));
+			_stprintf_s(sql, 256, pSql, strLlc.c_str());
+			(*conptr)->Execute(_bstr_t(sql), &EffectedRecCount, adCmdText);
+		}
+
+		(*conptr)->CommitTrans();
+	}
+	catch (_com_error e)
+	{
+		_tprintf(_T("%s-%d:错误信息:%s 错误代码:%08lx 错误源:%s 错误描述:%s\n"), __FILE__, __LINE__, e.ErrorMessage(), e.Error(), (const TCHAR*)e.Source(), (const TCHAR*)e.Description());
+
+		(*conptr)->RollbackTrans();
+		PostThreadMessage(nThreadID, WM_RELEASE_DBLINK, (WPARAM)conptr, NULL);
+		return false;
+	}
+
+	PostThreadMessage(nThreadID, WM_RELEASE_DBLINK, (WPARAM)conptr, NULL);
 	return true;
 }

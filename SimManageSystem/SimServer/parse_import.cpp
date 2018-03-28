@@ -41,11 +41,11 @@ bool doParseImport(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 		int nTag = (pObj++)->as<int>();
 		if (!DoTrans_NewCard_LeadIn(pObj))
 		{
-			ReturnSimpleInfo(msgPack, nCmd, nSubCmd, 1);
+			ReturnSimpleInfo(msgPack, nCmd, nSubCmd, nTag, 1);
 		}
 		else
 		{
-			ReturnSimpleInfo(msgPack, nCmd, nSubCmd, 0);
+			ReturnSimpleInfo(msgPack, nCmd, nSubCmd, nTag, 0);
 		}
 
 		DealLast(sbuf, bobj);
@@ -60,11 +60,11 @@ bool doParseImport(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 		int nTag = (pObj++)->as<int>();
 		if (!DoTrans_XSCard_LeadIn(pObj))
 		{
-			ReturnSimpleInfo(msgPack, nCmd, nSubCmd, 1);
+			ReturnSimpleInfo(msgPack, nCmd, nSubCmd, nTag, 1);
 		}
 		else
 		{
-			ReturnSimpleInfo(msgPack, nCmd, nSubCmd, 0);
+			ReturnSimpleInfo(msgPack, nCmd, nSubCmd, nTag, 0);
 		}
 
 		DealLast(sbuf, bobj);
@@ -80,11 +80,11 @@ bool doParseImport(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 		int nTag = (pObj++)->as<int>();
 		if (!DoTrans_UseCard_LeadIn(pObj))
 		{
-			ReturnSimpleInfo(msgPack, nCmd, nSubCmd, 1);
+			ReturnSimpleInfo(msgPack, nCmd, nSubCmd, nTag, 1);
 		}
 		else
 		{
-			ReturnSimpleInfo(msgPack, nCmd, nSubCmd, 0);
+			ReturnSimpleInfo(msgPack, nCmd, nSubCmd, nTag, 0);
 		}
 
 		DealLast(sbuf, bobj);
@@ -99,11 +99,11 @@ bool doParseImport(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 		int nTag = (pObj++)->as<int>();
 		if (!DoTrans_RenewData_LeadIn(pObj))
 		{
-			ReturnSimpleInfo(msgPack, nCmd, nSubCmd, 1);
+			ReturnSimpleInfo(msgPack, nCmd, nSubCmd, nTag, 1);
 		}
 		else
 		{
-			ReturnSimpleInfo(msgPack, nCmd, nSubCmd, 0);
+			ReturnSimpleInfo(msgPack, nCmd, nSubCmd, nTag, 0);
 		}
 
 		DealLast(sbuf, bobj);
@@ -118,11 +118,11 @@ bool doParseImport(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 		int nTag = (pObj++)->as<int>();
 		if (!DoTrans_ReturnCard_LeadIn(pObj))
 		{
-			ReturnSimpleInfo(msgPack, nCmd, nSubCmd, 1);
+			ReturnSimpleInfo(msgPack, nCmd, nSubCmd, nTag, 1);
 		}
 		else
 		{
-			ReturnSimpleInfo(msgPack, nCmd, nSubCmd, 0);
+			ReturnSimpleInfo(msgPack, nCmd, nSubCmd, nTag, 0);
 		}
 
 		DealLast(sbuf, bobj);
@@ -137,11 +137,11 @@ bool doParseImport(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 		int nTag = (pObj++)->as<int>();
 		if (!DoTrans_CancelData_LeadIn(pObj))
 		{
-			ReturnSimpleInfo(msgPack, nCmd, nSubCmd, 1);
+			ReturnSimpleInfo(msgPack, nCmd, nSubCmd, nTag, 1);
 		}
 		else
 		{
-			ReturnSimpleInfo(msgPack, nCmd, nSubCmd, 0);
+			ReturnSimpleInfo(msgPack, nCmd, nSubCmd, nTag, 0);
 		}
 
 		DealLast(sbuf, bobj);

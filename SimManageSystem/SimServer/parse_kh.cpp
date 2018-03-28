@@ -10,7 +10,10 @@ void ReturnKhInfo(_RecordsetPtr& pRecord, msgpack::packer<msgpack::sbuffer>& msg
 	VARIANT_BOOL bRt = pRecord->GetadoEOF();
 	while (!bRt)
 	{
-		msgPack.pack_array(8);
+		msgPack.pack_array(6);
+		_variant_t varId = pRecord->GetCollect("id");
+		AddData(varId, msgPack);
+
 		_variant_t varKhmc = pRecord->GetCollect("khmc");
 		AddData(varKhmc, msgPack);
 
@@ -19,15 +22,6 @@ void ReturnKhInfo(_RecordsetPtr& pRecord, msgpack::packer<msgpack::sbuffer>& msg
 
 		_variant_t varKhjl = pRecord->GetCollect("khjl");
 		AddData(varKhjl, msgPack);
-
-		_variant_t varUser = pRecord->GetCollect("user");
-		AddData(varUser, msgPack);
-
-		_variant_t varKhdm = pRecord->GetCollect("khdm");
-		AddData(varKhdm, msgPack);
-
-		_variant_t varGf = pRecord->GetCollect("gf");
-		AddData(varGf, msgPack);
 
 		_variant_t varXgrq = pRecord->GetCollect("xgrq");
 		AddData(varXgrq, msgPack);
@@ -53,59 +47,38 @@ bool doParseKh(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 
 	switch (nSubCmd)
 	{
-	case SUBCMD_ADD:
+	case SUBCMD_KH_ADD:
 	{
-		std::string strKhmc = (pObj++)->as<std::string>();
-		std::string strLxfs = (pObj++)->as<std::string>();
-		std::string strKhjl = (pObj++)->as<std::string>();
-		std::string strUser = (pObj++)->as<std::string>();
-		std::string strKhdm = (pObj++)->as<std::string>();
-		std::string strGf = (pObj++)->as<std::string>();
-		std::string strBz = (pObj++)->as<std::string>();
+		if (pObj->type == msgpack::type::ARRAY)
+		{
+			_tprintf(_T("test"));
+		}
+		msgpack::object* pArray = (pObj++)->via.array.ptr;
+
+		msgpack::object* pSubObj = (pArray++)->via.array.ptr;
+		std::string strKhmc = (pSubObj++)->as<std::string>();
+		std::string strLxfs = (pSubObj++)->as<std::string>();
+		std::string strKhjl = (pSubObj++)->as<std::string>();
+		std::string strBz = (pSubObj++)->as<std::string>();
 
 		msgpack::sbuffer sbuf;
 		msgpack::packer<msgpack::sbuffer> msgPack(&sbuf);
 		sbuf.write("\xfb\xfc", 6);
 
-		const TCHAR* pSql = _T("insert into kh_tbl (id,khmc,lxfs,khjl,user,khdm,gf,bz,xgrq) value(null,'%s','%s','%s','%s','%s','%s','%s',now())");
+		const TCHAR* pSql = _T("insert into kh_tbl (id,khmc,lxfs,khjl,xgrq,bz) value(null,'%s','%s','%s',CURDATE(),'%s')");
 		TCHAR sql[512];
 		memset(sql, 0x00, sizeof(sql));
-		_stprintf_s(sql, 512, pSql, strKhmc.c_str(), strLxfs.c_str(), strKhjl.c_str(), strUser.c_str(), strKhdm.c_str(), strGf.c_str(), strBz.c_str());
+		_stprintf_s(sql, 512, pSql, strKhmc.c_str(), strLxfs.c_str(), strKhjl.c_str(), strBz.c_str());
 		CheckSqlResult(sql, nCmd, nSubCmd, msgPack);
 
 		DealLast(sbuf, bobj);
 	}
 	break;
 
-	case SUBCMD_MODIFY:
-	{
-		std::string strOkhmc = (pObj++)->as<std::string>();
-		std::string strNkhmc = (pObj++)->as<std::string>();
-		std::string strLxfs = (pObj++)->as<std::string>();
-		std::string strKhjl = (pObj++)->as<std::string>();
-		std::string strUser = (pObj++)->as<std::string>();
-		std::string strKhdm = (pObj++)->as<std::string>();
-		std::string strGf = (pObj++)->as<std::string>();
-		std::string strBz = (pObj++)->as<std::string>();
-
-		msgpack::sbuffer sbuf;
-		msgpack::packer<msgpack::sbuffer> msgPack(&sbuf);
-		sbuf.write("\xfb\xfc", 6);
-
-		const TCHAR* pSql = _T("update kh_tbl set khmc = '%s', lxfs= '%s',khjl= '%s',user= '%s',khdm= '%s',gf= '%s',bz='%s',xgrq=now() where khmc = '%s'");
-		TCHAR sql[512];
-		memset(sql, 0x00, sizeof(sql));
-		_stprintf_s(sql, 512, pSql, strNkhmc.c_str(), strLxfs.c_str(), strKhjl.c_str(), strUser.c_str(), strKhdm.c_str(), strGf.c_str(), strBz.c_str(), strOkhmc.c_str());
-		CheckSqlResult(sql, nCmd, nSubCmd, msgPack);
-
-		DealLast(sbuf, bobj);
-	}
-	break;
-
-	case SUBCMD_SELECT_BY_KEY:
+	case SUBCMD_KH_GET_01:
 	{
 		std::string strKhmc = (pObj++)->as<std::string>();
-		
+
 		msgpack::sbuffer sbuf;
 		msgpack::packer<msgpack::sbuffer> msgPack(&sbuf);
 		sbuf.write("\xfb\xfc", 6);
@@ -122,32 +95,32 @@ bool doParseKh(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 		}
 
 		int lRstCount = pRecord->GetRecordCount();
-		msgPack.pack_array(4 + lRstCount);
+		msgPack.pack_array(4);
 		msgPack.pack(nCmd);
 		msgPack.pack(nSubCmd);
-		msgPack.pack(1);
-		msgPack.pack(_T("成功"));
+		msgPack.pack(0);
+		msgPack.pack_array(lRstCount);
 
 		ReturnKhInfo(pRecord, msgPack);
 		DealLast(sbuf, bobj);
 	}
 	break;
 
-	case SUBCMD_SELECT_BY_TAG:
+	case SUBCMD_KH_GET_02:
 	{
 		int nTag = (pObj++)->as<int>();
-		int nStart = 200 * (nTag - 1) + 1;
-		int nEnd = 200 * nTag;
+		int nStart = 200 * (nTag - 1);
+		//int nEnd = 200 * nTag;
 
 		msgpack::sbuffer sbuf;
 		msgpack::packer<msgpack::sbuffer> msgPack(&sbuf);
 		sbuf.write("\xfb\xfc", 6);
 		_RecordsetPtr pRecord;
 
-		const TCHAR* pSql = _T("select * from kh_tbl where id  between %d and %d");// 主键范围
+		const TCHAR* pSql = _T("select * from kh_tbl limit %d,200");// 主键范围
 		TCHAR sql[256];
 		memset(sql, 0x00, 256);
-		_stprintf_s(sql, 256, pSql, nStart, nEnd);
+		_stprintf_s(sql, 256, pSql, nStart);
 		if (!GetRecordSetDate(sql, pRecord, nCmd, nSubCmd, msgPack))
 		{
 			DealLast(sbuf, bobj);
@@ -155,13 +128,36 @@ bool doParseKh(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 		}
 
 		long lRstCount = pRecord->GetRecordCount();
-		msgPack.pack_array(4 + lRstCount);
+		msgPack.pack_array(5);
 		msgPack.pack(nCmd);
 		msgPack.pack(nSubCmd);
-		msgPack.pack(1);
-		msgPack.pack(_T("成功"));
+		msgPack.pack(0);
+		msgPack.pack(nTag);
+		msgPack.pack_array(lRstCount);
 
 		ReturnKhInfo(pRecord, msgPack);
+		DealLast(sbuf, bobj);
+	}
+	break;
+
+	case SUBCMD_KH_MODIFY:
+	{
+		int nId = (pObj++)->as<int>();
+		std::string strKhmc = (pObj++)->as<std::string>();
+		std::string strLxfs = (pObj++)->as<std::string>();
+		std::string strKhjl = (pObj++)->as<std::string>();
+		std::string strBz = (pObj++)->as<std::string>();
+
+		msgpack::sbuffer sbuf;
+		msgpack::packer<msgpack::sbuffer> msgPack(&sbuf);
+		sbuf.write("\xfb\xfc", 6);
+
+		const TCHAR* pSql = _T("update kh_tbl set khmc='%s',lxfs='%s',khjl='%s',bz='%s',xgrq=CURDATE() where id=%d");
+		TCHAR sql[512];
+		memset(sql, 0x00, sizeof(sql));
+		_stprintf_s(sql, 512, pSql, strKhmc.c_str(), strLxfs.c_str(), strKhjl.c_str(), strBz.c_str(), nId);
+		CheckSqlResult(sql, nCmd, nSubCmd, msgPack);
+
 		DealLast(sbuf, bobj);
 	}
 	break;
