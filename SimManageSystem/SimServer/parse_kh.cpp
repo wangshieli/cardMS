@@ -121,7 +121,7 @@ bool doParseKh(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 		TCHAR sql[256];
 		memset(sql, 0x00, 256);
 		_stprintf_s(sql, 256, pSql, nStart);
-		if (!GetRecordSetDate(sql, pRecord, nCmd, nSubCmd, msgPack))
+		if (!GetRecordSetDate(sql, pRecord, nCmd, nSubCmd, nTag, msgPack))
 		{
 			DealLast(sbuf, bobj);
 			return false;
@@ -131,8 +131,8 @@ bool doParseKh(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 		msgPack.pack_array(5);
 		msgPack.pack(nCmd);
 		msgPack.pack(nSubCmd);
-		msgPack.pack(0);
 		msgPack.pack(nTag);
+		msgPack.pack(0);
 		msgPack.pack_array(lRstCount);
 
 		ReturnKhInfo(pRecord, msgPack);

@@ -10,7 +10,10 @@ void ReturnLlcInfo(_RecordsetPtr& pRecord, msgpack::packer<msgpack::sbuffer>& ms
 	VARIANT_BOOL bRt = pRecord->GetadoEOF();
 	while (!bRt)
 	{
-		msgPack.pack_array(5);
+		msgPack.pack_array(6);
+		_variant_t varId = pRecord->GetCollect("id");
+		AddData(varId, msgPack);
+
 		_variant_t varLx = pRecord->GetCollect("llchm");
 		AddData(varLx, msgPack);
 
@@ -112,7 +115,7 @@ bool doParseLlc(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 		TCHAR sql[256];
 		memset(sql, 0x00, 256);
 		_stprintf_s(sql, 256, pSql, nStart);
-		if (!GetRecordSetDate(sql, pRecord, nCmd, nSubCmd, msgPack))
+		if (!GetRecordSetDate(sql, pRecord, nCmd, nSubCmd, nTag, msgPack))
 		{
 			DealLast(sbuf, bobj);
 			return false;
@@ -122,8 +125,8 @@ bool doParseLlc(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 		msgPack.pack_array(5);
 		msgPack.pack(nCmd);
 		msgPack.pack(nSubCmd);
-		msgPack.pack(0);
 		msgPack.pack(nTag);
+		msgPack.pack(0);
 		msgPack.pack_array(lRstCount);
 
 		ReturnLlcInfo(pRecord, msgPack);

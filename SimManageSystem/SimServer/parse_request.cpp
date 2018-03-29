@@ -128,6 +128,7 @@ bool doParseData(BUFFER_OBJ* bobj)
 		{
 			bRtn = doParseImport(result_, bobj);
 		}
+		break;
 
 		default:
 			ErrorInfo(bobj, _T("Î´ÖªÃüÁî\n"));

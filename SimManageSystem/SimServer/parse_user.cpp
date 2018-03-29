@@ -10,7 +10,10 @@ void ReturnUserInfo(_RecordsetPtr& pRecord, msgpack::packer<msgpack::sbuffer>& m
 	VARIANT_BOOL bRt = pRecord->GetadoEOF();
 	while (!bRt)
 	{
-		msgPack.pack_array(3);
+		msgPack.pack_array(4);
+		_variant_t varId = pRecord->GetCollect("username");
+		AddData(varId, msgPack);
+
 		_variant_t varUsername = pRecord->GetCollect("username");
 		AddData(varUsername, msgPack);
 
@@ -36,36 +39,16 @@ bool doParseUser(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 
 	switch (nSubCmd)
 	{
-	case USER_REGISTER:// 用户注册
+	case SUBCMD_USER_ADD:
 	{
-		//int nCount = (pObj++)->as<int>();
-		//for (int i = 0; i < nCount; i++)
-		//{
-		//	msgpack::object* item= pObj->via.array.ptr;
-		//	_tprintf(_T("%s:%s\n"), (item++)->as<std::string>().c_str(), (item++)->as<std::string>().c_str());// 反向处理
-		//	++pObj;
-		//}
 		std::string strUsername = (pObj++)->as<std::string>();
 		std::string strPassword = (pObj++)->as<std::string>();
-		//int l1 = (pObj++)->as<int>();
-		//int l2 = (pObj++)->as<int>();
 
 		msgpack::sbuffer sbuf;
 		msgpack::packer<msgpack::sbuffer> msgPack(&sbuf);
 		sbuf.write("\xfb\xfc", 6);
-		_RecordsetPtr pRecord;
 
 		TCHAR sql[256];
-		memset(sql, 0x00, sizeof(sql));
-		const TCHAR* pSql = _T("select * from user_tbl where username = '%s'");
-		_stprintf_s(sql, 256, pSql, strUsername.c_str());
-		if (!GetRecordSetDate(sql, pRecord, nCmd, nSubCmd, msgPack, true))
-		{
-			DealLast(sbuf, bobj);
-			return false;
-		}
-		ReleaseRecordset(pRecord);
-
 		memset(sql, 0x00, sizeof(sql));
 		_stprintf_s(sql, 256, _T("insert into user_tbl (id,username,password,xgrq) value(null,'%s','%s',now())"), strUsername.c_str(), strPassword.c_str());
 		CheckSqlResult(sql, nCmd, nSubCmd, msgPack);
@@ -74,43 +57,7 @@ bool doParseUser(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 	}
 	break;
 
-	case USER_LOGIN:// 用户登陆
-	{
-		std::string strUsername = (pObj++)->as<std::string>();
-		std::string strPassword = (pObj++)->as<std::string>();
-
-		msgpack::sbuffer sbuf;
-		msgpack::packer<msgpack::sbuffer> msgPack(&sbuf);
-		sbuf.write("\xfb\xfc", 6);
-		_RecordsetPtr pRecord;
-
-		const TCHAR* pSql = _T("select * from user_tbl where username = '%s' and password = '%s'");
-		TCHAR sql[256];
-		memset(sql, 0x00, 256);
-		_stprintf_s(sql, 256, pSql, strUsername.c_str(), strPassword.c_str());
-		if (!GetRecordSetDate(sql, pRecord, nCmd, nSubCmd, msgPack))
-		{
-			DealLast(sbuf, bobj);
-			return false;
-		}
-
-		//int l1 = pRecord->GetCollect("l1");
-		//int l2 = pRecord->GetCollect("l2");
-		ReleaseRecordset(pRecord);
-
-		msgPack.pack_array(4);
-		msgPack.pack(nCmd);
-		msgPack.pack(nSubCmd);
-		msgPack.pack(1);
-		msgPack.pack(_T("success"));
-		//msgPack.pack(l1);
-		//msgPack.pack(l2);
-
-		DealLast(sbuf, bobj);
-	}
-	break;
-
-	case USER_SELECT_BY_USERNAME:// 根据用户名查询
+	case SUBCMD_USER_GET_01:
 	{
 		std::string strUsername = (pObj++)->as<std::string>();
 
@@ -130,32 +77,31 @@ bool doParseUser(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 		}
 
 		int lRstCount = pRecord->GetRecordCount();
-		msgPack.pack_array(4 + lRstCount);
+		msgPack.pack_array(4);
 		msgPack.pack(nCmd);
 		msgPack.pack(nSubCmd);
-		msgPack.pack(1);
-		msgPack.pack(_T("success"));
+		msgPack.pack(0);
+		msgPack.pack_array(lRstCount);
 
 		ReturnUserInfo(pRecord, msgPack);
 		DealLast(sbuf, bobj);
 	}
 	break;
-	
-	case USER_SELECT_BY_TAG:// 查询user_tbl全部信息
+
+	case SUBCMD_USER_GET_02:
 	{
 		int nTag = (pObj++)->as<int>();
 		int nStart = 200 * (nTag - 1) + 1;
-		int nEnd = 200 * nTag;
 
 		msgpack::sbuffer sbuf;
 		msgpack::packer<msgpack::sbuffer> msgPack(&sbuf);
 		sbuf.write("\xfb\xfc", 6);
 		_RecordsetPtr pRecord;
 
-		const TCHAR* pSql = _T("select * from user_tbl where id  between %d and %d");// 主键范围
+		const TCHAR* pSql = _T("select * from user_tbl limit %d,200");// 主键范围
 		TCHAR sql[256];
 		memset(sql, 0x00, 256);
-		_stprintf_s(sql, 256, pSql, nStart, nEnd);
+		_stprintf_s(sql, 256, pSql, nStart);
 		if (!GetRecordSetDate(sql, pRecord, nCmd, nSubCmd, msgPack))
 		{
 			DealLast(sbuf, bobj);
@@ -163,57 +109,124 @@ bool doParseUser(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 		}
 
 		long lRstCount = pRecord->GetRecordCount();
-		msgPack.pack_array(4 + lRstCount);
+		msgPack.pack_array(5);
 		msgPack.pack(nCmd);
 		msgPack.pack(nSubCmd);
-		msgPack.pack(1);
-		msgPack.pack(_T("success"));
+		msgPack.pack(nTag);
+		msgPack.pack(0);
+		msgPack.pack_array(lRstCount);
 
 		ReturnUserInfo(pRecord, msgPack);
 		DealLast(sbuf, bobj);
 	}
 	break;
 
-	case USER_MODIFY_PASSWORD:
+	case SUBCMD_USER_LOGIN:
 	{
 		std::string strUsername = (pObj++)->as<std::string>();
 		std::string strPassword = (pObj++)->as<std::string>();
-		std::string strNPassword = (pObj++)->as<std::string>();
 
 		msgpack::sbuffer sbuf;
 		msgpack::packer<msgpack::sbuffer> msgPack(&sbuf);
 		sbuf.write("\xfb\xfc", 6);
+		_RecordsetPtr pRecord;
+
+		const TCHAR* pSql = _T("select * from user_tbl where username = '%s' and password = '%s'");
+		TCHAR sql[256];
+		memset(sql, 0x00, 256);
+		_stprintf_s(sql, 256, pSql, strUsername.c_str(), strPassword.c_str());
+		if (!GetRecordSetDate(sql, pRecord, nCmd, nSubCmd, msgPack))
+		{
+			DealLast(sbuf, bobj);
+			return false;
+		}
+
+		long lRstCount = pRecord->GetRecordCount();
+		msgPack.pack_array(4);
+		msgPack.pack(nCmd);
+		msgPack.pack(nSubCmd);
+		msgPack.pack(0);
+		msgPack.pack_array(lRstCount);
+
+		ReturnUserInfo(pRecord, msgPack);
+		DealLast(sbuf, bobj);
+	}
+	break;
+
+	case SUBCMD_USER_CHECK_UNAME:
+	{
+		std::string strUsername = (pObj++)->as<std::string>();
+
+		msgpack::sbuffer sbuf;
+		msgpack::packer<msgpack::sbuffer> msgPack(&sbuf);
+		sbuf.write("\xfb\xfc", 6);
+		_RecordsetPtr pRecord;
 
 		TCHAR sql[256];
 		memset(sql, 0x00, sizeof(sql));
-		_stprintf_s(sql, 256, _T("update user_tbl set password = '%s' where username = '%s' and password = '%s'"),
-			strNPassword.c_str(), strUsername.c_str(), strPassword.c_str());
-		CheckSqlResult(sql, nCmd, nSubCmd, msgPack);
+		const TCHAR* pSql = _T("select * from user_tbl where username = '%s'");
+		_stprintf_s(sql, 256, pSql, strUsername.c_str());
+		if (!GetRecordSet(sql, pRecord, adCmdText, true))
+		{
+			ReturnSimpleInfo(msgPack, nCmd, nSubCmd, 1);
+			ReleaseRecordset(pRecord);
+			DealLast(sbuf, bobj);
+			return false;
+		}
+		if (!pRecord->adoEOF)
+		{
+			ReturnSimpleInfo(msgPack, nCmd, nSubCmd, 1);
+			ReleaseRecordset(pRecord);
+			DealLast(sbuf, bobj);
+			return false;
+		}
+		ReleaseRecordset(pRecord);
+		ReturnSimpleInfo(msgPack, nCmd, nSubCmd, 0);
 
 		DealLast(sbuf, bobj);
 	}
 	break;
 
-	case USER_MODIFY_PRIVILEGE:
-	{
-		std::string strUsername = (pObj++)->as<std::string>();
-		std::string strPassword = (pObj++)->as<std::string>();
-		int l1 = (pObj++)->as<int>();
-		int l2 = (pObj++)->as<int>();
+	//case USER_MODIFY_PASSWORD:
+	//{
+	//	std::string strUsername = (pObj++)->as<std::string>();
+	//	std::string strPassword = (pObj++)->as<std::string>();
+	//	std::string strNPassword = (pObj++)->as<std::string>();
 
-		msgpack::sbuffer sbuf;
-		msgpack::packer<msgpack::sbuffer> msgPack(&sbuf);
-		sbuf.write("\xfb\xfc", 6);
+	//	msgpack::sbuffer sbuf;
+	//	msgpack::packer<msgpack::sbuffer> msgPack(&sbuf);
+	//	sbuf.write("\xfb\xfc", 6);
 
-		TCHAR sql[256];
-		memset(sql, 0x00, sizeof(sql));
-		_stprintf_s(sql, 256, _T("update user_tbl set l1 = %d, l2 = %d where username = '%s' and password = '%s'"),
-			l1, l2, strUsername.c_str(), strPassword.c_str());
-		CheckSqlResult(sql, nCmd, nSubCmd, msgPack);
+	//	TCHAR sql[256];
+	//	memset(sql, 0x00, sizeof(sql));
+	//	_stprintf_s(sql, 256, _T("update user_tbl set password = '%s' where username = '%s' and password = '%s'"),
+	//		strNPassword.c_str(), strUsername.c_str(), strPassword.c_str());
+	//	CheckSqlResult(sql, nCmd, nSubCmd, msgPack);
 
-		DealLast(sbuf, bobj);
-	}
-	break;
+	//	DealLast(sbuf, bobj);
+	//}
+	//break;
+
+	//case USER_MODIFY_PRIVILEGE:
+	//{
+	//	std::string strUsername = (pObj++)->as<std::string>();
+	//	std::string strPassword = (pObj++)->as<std::string>();
+	//	int l1 = (pObj++)->as<int>();
+	//	int l2 = (pObj++)->as<int>();
+
+	//	msgpack::sbuffer sbuf;
+	//	msgpack::packer<msgpack::sbuffer> msgPack(&sbuf);
+	//	sbuf.write("\xfb\xfc", 6);
+
+	//	TCHAR sql[256];
+	//	memset(sql, 0x00, sizeof(sql));
+	//	_stprintf_s(sql, 256, _T("update user_tbl set l1 = %d, l2 = %d where username = '%s' and password = '%s'"),
+	//		l1, l2, strUsername.c_str(), strPassword.c_str());
+	//	CheckSqlResult(sql, nCmd, nSubCmd, msgPack);
+
+	//	DealLast(sbuf, bobj);
+	//}
+	//break;
 	
 	default:
 		break;

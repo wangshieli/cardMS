@@ -204,17 +204,17 @@ bool GetRecordSetDate(const TCHAR* sql, _RecordsetPtr& pRecord, int nCmd, int nS
 	return true;
 }
 
-bool GetRecordSetDate(const TCHAR* sql, _RecordsetPtr& pRecord, int nCmd, int nSubCmd, msgpack::packer<msgpack::sbuffer>& msgPack, bool bGlag)
+bool GetRecordSetDate(const TCHAR* sql, _RecordsetPtr& pRecord, int nCmd, int nSubCmd, int nTag, msgpack::packer<msgpack::sbuffer>& msgPack)
 {
 	if (!GetRecordSet(sql, pRecord, adCmdText, true))
 	{
-		ReturnSimpleInfo(msgPack, nCmd, nSubCmd, 1);
+		ReturnSimpleInfo(msgPack, nCmd, nSubCmd, nTag, 1);
 		ReleaseRecordset(pRecord);
 		return false;
 	}
-	if (!pRecord->adoEOF)
+	if (pRecord->adoEOF)
 	{
-		ReturnSimpleInfo(msgPack, nCmd, nSubCmd, 1);
+		ReturnSimpleInfo(msgPack, nCmd, nSubCmd, nTag, 1);
 		ReleaseRecordset(pRecord);
 		return false;
 	}

@@ -14,7 +14,7 @@ void ReturnSimpleInfo(msgpack::packer<msgpack::sbuffer>& msgPack, int nCmd, int 
 
 bool GetRecordSetDate(const TCHAR* sql, _RecordsetPtr& pRecord, int nCmd, int nSubCmd, msgpack::packer<msgpack::sbuffer>& msgPack);
 
-bool GetRecordSetDate(const TCHAR* sql, _RecordsetPtr& pRecord, int nCmd, int nSubCmd, msgpack::packer<msgpack::sbuffer>& msgPack, bool bGlag);
+bool GetRecordSetDate(const TCHAR* sql, _RecordsetPtr& pRecord, int nCmd, int nSubCmd, int nTag, msgpack::packer<msgpack::sbuffer>& msgPack);
 
 void CheckSqlResult(const TCHAR* sql, int nCmd, int nSubCmd, msgpack::packer<msgpack::sbuffer>& msgPack);
 

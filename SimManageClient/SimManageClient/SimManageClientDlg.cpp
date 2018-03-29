@@ -90,6 +90,8 @@ BEGIN_MESSAGE_MAP(CSimManageClientDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BUTTON7, &CSimManageClientDlg::OnBnClickedButton7)
 	ON_BN_CLICKED(IDC_BUTTON8, &CSimManageClientDlg::OnBnClickedButton8)
 	ON_BN_CLICKED(IDC_BUTTON9, &CSimManageClientDlg::OnBnClickedButton9)
+	ON_BN_CLICKED(IDC_BUTTON10, &CSimManageClientDlg::OnBnClickedButton10)
+	ON_BN_CLICKED(IDC_BUTTON11, &CSimManageClientDlg::OnBnClickedButton11)
 END_MESSAGE_MAP()
 
 
@@ -749,6 +751,53 @@ void CSimManageClientDlg::OnBnClickedButton9()
 	msgPack.pack("18518253625");
 	msgPack.pack("埃及阿尤");
 	msgPack.pack("测试修改用户新信息");
+
+	DealLast(sbuf);
+	closesocket(s);
+	s = INVALID_SOCKET;
+}
+
+
+void CSimManageClientDlg::OnBnClickedButton10()
+{
+	// TODO: 在此添加控件通知处理程序代码
+	OnBnClickedBtnLinkserver();
+	UpdateData();
+	int n = 0;
+	int m = 0;
+
+	sbuffer sbuf;
+	packer<sbuffer> msgPack(&sbuf);
+	sbuf.write("\xfb\xfc", 6);
+	msgPack.pack_array(6);
+	msgPack.pack((int)CMD_SIM);
+	msgPack.pack((int)SUBCMD_SIM_ADD);
+	msgPack.pack("jrhm_add");
+	msgPack.pack("18518253625");
+	msgPack.pack("中国移动");
+	msgPack.pack("123654");
+
+	DealLast(sbuf);
+	closesocket(s);
+	s = INVALID_SOCKET;
+}
+
+
+void CSimManageClientDlg::OnBnClickedButton11()
+{
+	// TODO: 在此添加控件通知处理程序代码
+	OnBnClickedBtnLinkserver();
+	UpdateData();
+	int n = 0;
+	int m = 0;
+
+	sbuffer sbuf;
+	packer<sbuffer> msgPack(&sbuf);
+	sbuf.write("\xfb\xfc", 6);
+	msgPack.pack_array(3);
+	msgPack.pack((int)CMD_SIM);
+	msgPack.pack((int)SUBCMD_SIM_GET_01);
+	msgPack.pack("jrhm_add");
 
 	DealLast(sbuf);
 	closesocket(s);

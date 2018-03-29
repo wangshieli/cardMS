@@ -64,6 +64,14 @@ typedef enum
 	SUBCMD_KH_MODIFY,		// 修改客户信息
 }SUBCMD_KH;
 
+typedef enum
+{
+	SUBCMD_SIM_ADD = 0X01,	// 增加sim卡
+	SUBCMD_SIM_GET_01,		// 通过接入号码查询卡信息
+	SUBCMD_SIM_GET_02,		// 批量查询卡信息
+	SUBCMD_SIM_GET_03,		// 通过ICCID查询卡信息
+}SUBCMD_SIM;
+
 // 通用子命令
 typedef enum
 {
@@ -101,7 +109,7 @@ typedef enum
 	SIM_STOP,					// 停机
 	SIM_START,					// 复机
 	SIM_STATE_UPDATE,			// 更新卡状态
-}SUBCMD_SIM;
+}SUBCMD_SIM01;
 
 
 
