@@ -15,6 +15,7 @@
 #include "parse_lltc.h"
 #include "parse_ssdq.h"
 #include "parse_import.h"
+#include "sql_test.h"
 
 void ErrorInfo(BUFFER_OBJ* bobj, const TCHAR* pErrorInfo)
 {
@@ -127,6 +128,12 @@ bool doParseData(BUFFER_OBJ* bobj)
 		case CMD_IMPORT:
 		{
 			bRtn = doParseImport(result_, bobj);
+		}
+		break;
+
+		case CMD_SQLTEST:
+		{
+			bRtn = doSqlTest(result_, bobj);
 		}
 		break;
 

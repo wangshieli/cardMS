@@ -14,13 +14,13 @@ void ReturnKhjlInfo(_RecordsetPtr& pRecord, msgpack::packer<msgpack::sbuffer>& m
 		_variant_t varId = pRecord->GetCollect("id");
 		AddData(varId, msgPack);
 
-		_variant_t varXm = pRecord->GetCollect("xm");
+		_variant_t varXm = pRecord->GetCollect("jlmc");
 		AddData(varXm, msgPack);
 
 		_variant_t varLxfs = pRecord->GetCollect("lxfs");
 		AddData(varLxfs, msgPack);
 
-		_variant_t varXgrq = pRecord->GetCollect("xgrq");
+		_variant_t varXgrq = pRecord->GetCollect("xgsj");
 		AddData(varXgrq, msgPack);
 
 		_variant_t varBz = pRecord->GetCollect("bz");
@@ -35,6 +35,10 @@ void ReturnKhjlInfo(_RecordsetPtr& pRecord, msgpack::packer<msgpack::sbuffer>& m
 	pRecord = NULL;
 }
 
+#define SQL_ITEM_COUNT _T("SELECT %s,COUNT(*) num FROM %s GROUP BY %s");// 用来获取客户经理明细中的 销售记录 %s=字段名  %s=表名  %s=字段名
+
+const TCHAR* pSql_XSJL = _T("SELECT xsrq,COUNT(*) num FROM sim_tbl WHERE khjl='%s' GROUP BY xsrq");// 用来获取客户经理明细中的 销售记录
+
 bool doParseKhjl(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 {
 	int nCmd = CMD_KHJL;
@@ -46,19 +50,18 @@ bool doParseKhjl(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 	{
 	case SUBCMD_KHJL_ADD:
 	{
-		std::string strXm = (pObj++)->as<std::string>();
+		std::string strJlmc = (pObj++)->as<std::string>();
 		std::string strLxfs = (pObj++)->as<std::string>();
-		std::string strUser = (pObj++)->as<std::string>();
 		std::string strBz = (pObj++)->as<std::string>();
 
 		msgpack::sbuffer sbuf;
 		msgpack::packer<msgpack::sbuffer> msgPack(&sbuf);
 		sbuf.write("\xfb\xfc", 6);
 
-		const TCHAR* pSql = _T("insert into khjl_tbl (id,xm,lxfs,user,bz,xgrq) value(null,'%s','%s','%s','%s',now())");
+		const TCHAR* pSql = _T("insert into khjl_tbl (id,jlmc,lxfs,bz,xgsj) value(null,'%s','%s','%s',now())");
 		TCHAR sql[256];
 		memset(sql, 0x00, sizeof(sql));
-		_stprintf_s(sql, 256, pSql, strXm.c_str(), strLxfs.c_str(), strUser.c_str(), strBz.c_str());
+		_stprintf_s(sql, 256, pSql, strJlmc.c_str(), strLxfs.c_str(), strBz.c_str());
 		CheckSqlResult(sql, nCmd, nSubCmd, msgPack);
 
 		DealLast(sbuf, bobj);
@@ -67,22 +70,34 @@ bool doParseKhjl(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 
 	case SUBCMD_KHJL_GET_01:
 	{
-		std::string strXm = (pObj++)->as<std::string>();
+		std::string strJlmc = (pObj++)->as<std::string>();
 
 		msgpack::sbuffer sbuf;
 		msgpack::packer<msgpack::sbuffer> msgPack(&sbuf);
 		sbuf.write("\xfb\xfc", 6);
 		_RecordsetPtr pRecord;
 
-		const TCHAR* pSql = _T("select * from khjl_tbl where xm = '%s'");
+		const TCHAR* pSql = _T("select * from khjl_tbl where jlmc = '%s'");
 		TCHAR sql[256];
 		memset(sql, 0x00, 256);
-		_stprintf_s(sql, 256, pSql, strXm.c_str());
+		_stprintf_s(sql, 256, pSql, strJlmc.c_str());
 		if (!GetRecordSetDate(sql, pRecord, nCmd, nSubCmd, msgPack))
 		{
 			DealLast(sbuf, bobj);
 			return false;
 		}
+
+		//pSql = _T("SELECT count(*) num1,num2 FROM (SELECT zt,count(*) num2 FROM sim_tbl WHERE khjl='%s') WHERE zt='在用'");// num1在用状态数量， num2客户经理名下卡数量
+
+		//_RecordsetPtr pRecord1;
+		//pSql = _T("SELECT xsrq,count(*) num FROM sim_tbl WHERE khjl='%s' GROUP BY xsrq");
+		//memset(sql, 0x00, 256);
+		//_stprintf_s(sql, 256, pSql, strJlmc.c_str());
+		//if (!GetRecordSetDate(sql, pRecord1, nCmd, nSubCmd, msgPack))
+		//{
+		//	DealLast(sbuf, bobj);
+		//	return false;
+		//}
 
 		int lRstCount = pRecord->GetRecordCount();
 		msgPack.pack_array(4);

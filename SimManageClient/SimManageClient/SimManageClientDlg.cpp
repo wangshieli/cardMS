@@ -92,6 +92,7 @@ BEGIN_MESSAGE_MAP(CSimManageClientDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BUTTON9, &CSimManageClientDlg::OnBnClickedButton9)
 	ON_BN_CLICKED(IDC_BUTTON10, &CSimManageClientDlg::OnBnClickedButton10)
 	ON_BN_CLICKED(IDC_BUTTON11, &CSimManageClientDlg::OnBnClickedButton11)
+	ON_BN_CLICKED(IDC_BUTTON12, &CSimManageClientDlg::OnBnClickedButton12)
 END_MESSAGE_MAP()
 
 
@@ -301,7 +302,7 @@ void CSimManageClientDlg::OnBnClickedBtnLinkserver()
 	struct sockaddr_in sAddr;
 	ZeroMemory(&sAddr, sizeof(sAddr));
 	sAddr.sin_family = AF_INET;
-	sAddr.sin_port = htons(6088);
+	sAddr.sin_port = htons(6086);
 	sAddr.sin_addr.S_un.S_addr = inet_addr("127.0.0.1");
 	if (SOCKET_ERROR == connect(s, (sockaddr*)&sAddr, sizeof(sAddr)))
 	{
@@ -797,6 +798,28 @@ void CSimManageClientDlg::OnBnClickedButton11()
 	msgPack.pack_array(3);
 	msgPack.pack((int)CMD_SIM);
 	msgPack.pack((int)SUBCMD_SIM_GET_01);
+	msgPack.pack("jrhm_add");
+
+	DealLast(sbuf);
+	closesocket(s);
+	s = INVALID_SOCKET;
+}
+
+
+void CSimManageClientDlg::OnBnClickedButton12()
+{
+	// TODO: 在此添加控件通知处理程序代码
+	OnBnClickedBtnLinkserver();
+	UpdateData();
+	int n = 0;
+	int m = 0;
+
+	sbuffer sbuf;
+	packer<sbuffer> msgPack(&sbuf);
+	sbuf.write("\xfb\xfc", 6);
+	msgPack.pack_array(3);
+	msgPack.pack((int)9);
+	msgPack.pack((int)1);
 	msgPack.pack("jrhm_add");
 
 	DealLast(sbuf);

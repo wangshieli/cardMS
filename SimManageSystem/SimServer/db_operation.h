@@ -26,3 +26,8 @@ bool GetRecordSet(const TCHAR* bSql, _RecordsetPtr& pRecord, long lOption /*= ad
 void ReleaseDBPool();
 
 void ReleaseRecordset(_RecordsetPtr& pRecord);
+
+bool CreateDBConnection(_ConnectionPtr& conptr);
+void ReleaseConnectionPtr(_ConnectionPtr& conptr);
+bool ExcuteWithoutCheck(_ConnectionPtr& conptr, const TCHAR* bSql);
+bool GetRecordSetWithoutCheck(_ConnectionPtr &conptr, const TCHAR* bSql, _RecordsetPtr& pRecord, long lOption /*= adCmdText*/);

@@ -22,11 +22,6 @@ vector<_ConnectionPtr *> v_DBLinkVector;
 unsigned int nThreadID;
 unsigned int _stdcall tfunc_dblink(LPVOID pVoid);
 
-bool CreateDBConnection(_ConnectionPtr& conptr);
-void ReleaseConnectionPtr(_ConnectionPtr& conptr);
-bool ExcuteWithoutCheck(_ConnectionPtr& conptr, const TCHAR* bSql);
-bool GetRecordSetWithoutCheck(_ConnectionPtr &conptr, const TCHAR* bSql, _RecordsetPtr& pRecord, long lOption /*= adCmdText*/);
-
 void InitDBPool()
 {
 	::CoInitialize(NULL);
