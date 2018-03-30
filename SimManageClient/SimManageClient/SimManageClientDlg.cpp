@@ -302,7 +302,7 @@ void CSimManageClientDlg::OnBnClickedBtnLinkserver()
 	struct sockaddr_in sAddr;
 	ZeroMemory(&sAddr, sizeof(sAddr));
 	sAddr.sin_family = AF_INET;
-	sAddr.sin_port = htons(6086);
+	sAddr.sin_port = htons(6088);
 	sAddr.sin_addr.S_un.S_addr = inet_addr("127.0.0.1");
 	if (SOCKET_ERROR == connect(s, (sockaddr*)&sAddr, sizeof(sAddr)))
 	{

@@ -61,6 +61,22 @@ void InitConnection(const int iMix, const int iMax)
 				nCurrentNum++;
 				LeaveCriticalSection(&cs_DBLinkVector);
 			}
+			else
+			{
+				if ((*conptr) == NULL)
+				{
+					delete conptr;
+					conptr = NULL;
+				}
+				else
+				{
+					if ((*conptr)->State == adStateOpen)
+						(*conptr)->Close();
+					(*conptr)->Release();
+					(*conptr) = NULL;
+					conptr = NULL;
+				}
+			}
 		}
 		bInitial = false;
 	}
@@ -69,6 +85,8 @@ void InitConnection(const int iMix, const int iMax)
 _ConnectionPtr* GetTransConnection()
 {
 	_ConnectionPtr* conptr = GetConnectionPtr();
+	if (NULL == conptr)
+		return NULL;
 	if ((*conptr)->State != adStateOpen)
 	{
 		ReleaseConnectionPtr(*conptr);
@@ -172,8 +190,10 @@ bool CreateDBConnection(_ConnectionPtr& conptr)
 		_stprintf_s(strConn, 256, _T("DATABASE=%s;DSN=%s;OPTION=0;PWD=%s;PORT=0;SERVER=localhost;UID=%s"), DB_NAME, DB_DSN, DB_PWD, DB_USER);
 		HRESULT hr = conptr->Open(_bstr_t(strConn), "", "", adModeUnknown);
 		if (FAILED(hr))
-			return false;
-
+		{
+			_tprintf(_T("连接数据库失败\n"));
+			return FALSE;
+		}
 		return true;
 	}
 	catch (_com_error& e)
@@ -200,6 +220,20 @@ _ConnectionPtr *GetConnectionPtr()
 				conptr = new _ConnectionPtr;
 				if (CreateDBConnection(*conptr))
 					nCurrentNum++;
+				else
+				{
+					if ((*conptr) == NULL)
+					{
+						delete conptr;
+						conptr = NULL;
+					}
+					else
+					{
+						(*conptr)->Release();
+						(*conptr) = NULL;
+						conptr = NULL;
+					}
+				}
 			}
 			else
 			{
