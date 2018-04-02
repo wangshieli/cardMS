@@ -9,3 +9,7 @@ GuidGetAcceptExSockaddrs = WSAID_GETACCEPTEXSOCKADDRS;
 
 LPFN_ACCEPTEX lpfnAccpetEx = NULL;
 LPFN_GETACCEPTEXSOCKADDRS lpfnGetAcceptExSockaddrs = NULL;
+
+int g_nCountOfSim = 0;
+int g_nCountOfKh = 0;
+int g_nCountOfKhjl = 0;

@@ -20,7 +20,7 @@ void ReturnKhInfo(_RecordsetPtr& pRecord, msgpack::packer<msgpack::sbuffer>& msg
 		_variant_t varLxfs = pRecord->GetCollect("lxfs");
 		AddData(varLxfs, msgPack);
 
-		_variant_t varKhjl = pRecord->GetCollect("khjl");
+		_variant_t varKhjl = pRecord->GetCollect("jlxm");
 		AddData(varKhjl, msgPack);
 
 		_variant_t varXgrq = pRecord->GetCollect("xgrq");
@@ -58,17 +58,17 @@ bool doParseKh(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 		msgpack::object* pSubObj = (pArray++)->via.array.ptr;
 		std::string strKhmc = (pSubObj++)->as<std::string>();
 		std::string strLxfs = (pSubObj++)->as<std::string>();
-		std::string strKhjl = (pSubObj++)->as<std::string>();
+		std::string strJlxm = (pSubObj++)->as<std::string>();
 		std::string strBz = (pSubObj++)->as<std::string>();
 
 		msgpack::sbuffer sbuf;
 		msgpack::packer<msgpack::sbuffer> msgPack(&sbuf);
 		sbuf.write("\xfb\xfc", 6);
 
-		const TCHAR* pSql = _T("insert into kh_tbl (id,khmc,lxfs,khjl,xgrq,bz) value(null,'%s','%s','%s',CURDATE(),'%s')");
+		const TCHAR* pSql = _T("INSERT INTO kh_tbl (id,khmc,lxfs,jlxm,xgsj,bz) VALUES(null,'%s','%s','%s',now(),'%s')");
 		TCHAR sql[512];
 		memset(sql, 0x00, sizeof(sql));
-		_stprintf_s(sql, 512, pSql, strKhmc.c_str(), strLxfs.c_str(), strKhjl.c_str(), strBz.c_str());
+		_stprintf_s(sql, 512, pSql, strKhmc.c_str(), strLxfs.c_str(), strJlxm.c_str(), strBz.c_str());
 		CheckSqlResult(sql, nCmd, nSubCmd, msgPack);
 
 		DealLast(sbuf, bobj);
@@ -78,7 +78,7 @@ bool doParseKh(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 	case SUBCMD_KH_GET_01:
 	{
 		int nSSubCmd = (pObj++)->as<int>();
-		std::string strJlmc = (pObj++)->as<std::string>();
+		std::string strKhmc = (pObj++)->as<std::string>();
 
 		const TCHAR* pSql = NULL;
 		TCHAR sql[256];
@@ -91,14 +91,15 @@ bool doParseKh(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 		{
 		case SSUBCMD_KH_TOTAL:
 		{
-			pSql = _T("SELECT COUNT(*) num01 FROM tmp_tbl WHERE dqrq>CURDATE() AND dqrq>DATE_ADD(CURDATE(),INTERVAL 1 MONTH");
-			pSql = _T("SELECT COUNT(*) num02 FROM tmp_tbl WHERE dqrq>CURDATE() AND dqrq>DATE_ADD(CURDATE(),INTERVAL 15 DAY");
-			pSql = _T("SELECT COUNT(*) num03 FROM tmp_tbl WHERE dqrq<CURDATE() AND dqrq<DATE_SUB(CURDATE(),INTERVAL 1 MONTH");
-			pSql = _T("SELECT COUNT(*) num04 FROM tmp_tbl WHERE dqrq<CURDATE() AND dqrq<DATE_SUB(CURDATE(),INTERVAL 15 DAY");
-
-			pSql = _T("SELECT lxfs FROM khjl_tbl WHERE jlmc='%s'");// num1在用状态数量， num2客户经理名下卡数量
+			pSql = _T("SELECT a.*,b.jlxm,b.lxfs FROM (SELECT COUNT(*) AS 'sim_total',\
+SUM(CASE WHEN zt='在用' THEN 1 ELSE 0 END) AS 'sim_using',\
+SUM(CASE WHEN dqrq>CURDATE() AND dqrq<DATE_ADD(CURDATE(),INTERVAL 15 DAY) THEN 1 ELSE 0 END) AS 'use_15d',\
+SUM(CASE WHEN dqrq>CURDATE() AND dqrq<DATE_ADD(CURDATE(),INTERVAL 1 MONTH) THEN 1 ELSE 0 END) AS 'use_1m',\
+SUM(CASE WHEN dqrq<CURDATE() AND dqrq>DATE_SUB(CURDATE(),INTERVAL 1 MONTH) THEN 1 ELSE 0 END) AS 'due_1m',\
+SUM(CASE WHEN dqrq<CURDATE() AND dqrq>DATE_SUB(CURDATE(),INTERVAL 15 DAY) THEN 1 ELSE 0 END) AS 'due_15d' FROM sim_tbl WHERE khmc='%s') a \
+LEFT JOIN kh_tbl b ON b.khmc='%s'");
 			memset(sql, 0x00, 256);
-			_stprintf_s(sql, 256, pSql, strJlmc.c_str());
+			_stprintf_s(sql, 256, pSql, strKhmc.c_str(), strKhmc.c_str());
 			_RecordsetPtr pRecord;
 			if (!GetRecordSetDate(sql, pRecord, nCmd, nSubCmd, msgPack))
 			{
@@ -106,34 +107,33 @@ bool doParseKh(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 				return false;
 			}
 
-			pSql = _T("SELECT count(*) num1,num2 FROM (SELECT zt,count(*) num2 FROM sim_tbl WHERE khjl='%s') t WHERE t.zt='在用'");// num1在用状态数量， num2客户经理名下卡数量
-			memset(sql, 0x00, 256);
-			_stprintf_s(sql, 256, pSql, strJlmc.c_str());
-			_RecordsetPtr pRecord01;
-			if (!GetRecordSetDate(sql, pRecord01, nCmd, nSubCmd, msgPack))
-			{
-				DealLast(sbuf, bobj);
-				return false;
-			}
-
-			int lRstCount = pRecord01->GetRecordCount();
 			msgPack.pack_array(5);
 			msgPack.pack(nCmd);
 			msgPack.pack(nSubCmd);
 			msgPack.pack(nSSubCmd);
 			msgPack.pack(0);
-			msgPack.pack_array(lRstCount);
+			msgPack.pack_array(1);
 
-			msgPack.pack_array(3);
+			msgPack.pack_array(8);
+			_variant_t varKhjl = pRecord->GetCollect("jlxm");
+			AddData(varKhjl, msgPack);
 			_variant_t varLxfs = pRecord->GetCollect("lxfs");
 			AddData(varLxfs, msgPack);
-			_variant_t varZksl = pRecord01->GetCollect("num2");
+			_variant_t varZksl = pRecord->GetCollect("sim_total");
 			AddData(varZksl, msgPack);
-			_variant_t varKysl = pRecord01->GetCollect("num1");
+			_variant_t varKysl = pRecord->GetCollect("sim_using");
 			AddData(varKysl, msgPack);
+			_variant_t varUse1M = pRecord->GetCollect("use_1m");
+			AddData(varUse1M, msgPack);
+			_variant_t varUse15D = pRecord->GetCollect("use_15d");
+			AddData(varUse15D, msgPack);
+			_variant_t varDue1M = pRecord->GetCollect("due_1m");
+			AddData(varDue1M, msgPack);
+			_variant_t varDue15D = pRecord->GetCollect("due_15d");
+			AddData(varDue15D, msgPack);
 
 			ReleaseRecordset(pRecord);
-			ReleaseRecordset(pRecord01);
+
 			DealLast(sbuf, bobj);
 		}
 		break;
@@ -141,12 +141,14 @@ bool doParseKh(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 		case SSUBCMD_KH_XSINFO:
 		{
 			int nTag = (pObj++)->as<int>();
-			int nStart = (nTag - 1) * 200;
-			pSql = _T("SELECT xsrq,COUNT(*) num FROM sim_tbl WHERE khjl='%s' GROUP BY xsrq");// 用来获取客户经理明细中的 销售记录
+			int nNeed = (pObj++)->as<int>();
+			int nStart = (nTag - 1) * nNeed;
+
+			pSql = _T("SELECT xsrq,COUNT(*) num FROM sim_tbl WHERE khmc='%s' GROUP BY xsrq");// 用来获取客户经理明细中的 销售记录
 			memset(sql, 0x00, 256);
-			_stprintf_s(sql, 256, pSql, strJlmc.c_str());
+			_stprintf_s(sql, 256, pSql, strKhmc.c_str());
 			_RecordsetPtr pRecord;
-			if (!GetRecordSetDate(sql, pRecord, nCmd, nSubCmd, msgPack))
+			if (!GetRecordSetDate(sql, pRecord, nCmd, nSubCmd, nTag, msgPack))
 			{
 				DealLast(sbuf, bobj);
 				return false;
@@ -161,15 +163,14 @@ bool doParseKh(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 			msgPack.pack(nTag);
 			msgPack.pack(lRstCount);// 数据条数
 
-			if (lRstCount - nStart >= 200)
-				msgPack.pack_array(200);
+			if (lRstCount - nStart >= nNeed)
+				msgPack.pack_array(nNeed);
 			else
 				msgPack.pack_array(lRstCount - nStart);
 
 			pRecord->Move(nStart);
-			int nRecords = 200;
 			VARIANT_BOOL bRt = pRecord->GetadoEOF(); // 销售记录
-			while (!bRt && nRecords--)
+			while (!bRt && nNeed--)
 			{
 				msgPack.pack_array(2);
 
@@ -194,41 +195,11 @@ bool doParseKh(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 	}
 	break;
 
-	//case SUBCMD_KH_GET_01:
-	//{
-	//	std::string strKhmc = (pObj++)->as<std::string>();
-
-	//	msgpack::sbuffer sbuf;
-	//	msgpack::packer<msgpack::sbuffer> msgPack(&sbuf);
-	//	sbuf.write("\xfb\xfc", 6);
-	//	_RecordsetPtr pRecord;
-
-	//	const TCHAR* pSql = _T("select * from kh_tbl where khmc = '%s'");
-	//	TCHAR sql[256];
-	//	memset(sql, 0x00, 256);
-	//	_stprintf_s(sql, 256, pSql, strKhmc.c_str());
-	//	if (!GetRecordSetDate(sql, pRecord, nCmd, nSubCmd, msgPack))
-	//	{
-	//		DealLast(sbuf, bobj);
-	//		return false;
-	//	}
-
-	//	int lRstCount = pRecord->GetRecordCount();
-	//	msgPack.pack_array(4);
-	//	msgPack.pack(nCmd);
-	//	msgPack.pack(nSubCmd);
-	//	msgPack.pack(0);
-	//	msgPack.pack_array(lRstCount);
-
-	//	ReturnKhInfo(pRecord, msgPack);
-	//	DealLast(sbuf, bobj);
-	//}
-	//break;
-
 	case SUBCMD_KH_GET_02:
 	{
 		int nTag = (pObj++)->as<int>();
-		int nStart = 200 * (nTag - 1);
+		int nNeed = (pObj++)->as<int>();
+		int nStart = nNeed * (nTag - 1);
 		//int nEnd = 200 * nTag;
 
 		msgpack::sbuffer sbuf;
@@ -236,10 +207,10 @@ bool doParseKh(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 		sbuf.write("\xfb\xfc", 6);
 		_RecordsetPtr pRecord;
 
-		const TCHAR* pSql = _T("select * from kh_tbl limit %d,200");// 主键范围
+		const TCHAR* pSql = _T("select * from kh_tbl limit %d,%d");// 主键范围
 		TCHAR sql[256];
 		memset(sql, 0x00, 256);
-		_stprintf_s(sql, 256, pSql, nStart);
+		_stprintf_s(sql, 256, pSql, nStart, nNeed);
 		if (!GetRecordSetDate(sql, pRecord, nCmd, nSubCmd, nTag, msgPack))
 		{
 			DealLast(sbuf, bobj);
@@ -247,12 +218,19 @@ bool doParseKh(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 		}
 
 		long lRstCount = pRecord->GetRecordCount();
-		msgPack.pack_array(5);
+		msgPack.pack_array(6);
 		msgPack.pack(nCmd);
 		msgPack.pack(nSubCmd);
 		msgPack.pack(nTag);
 		msgPack.pack(0);
-		msgPack.pack_array(lRstCount);
+		msgPack.pack(lRstCount);// 数据条数
+
+		if (lRstCount - nStart >= nNeed)
+			msgPack.pack_array(nNeed);
+		else
+			msgPack.pack_array(lRstCount - nStart);
+
+		pRecord->Move(nStart);
 
 		ReturnKhInfo(pRecord, msgPack);
 		DealLast(sbuf, bobj);

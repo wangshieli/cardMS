@@ -69,6 +69,9 @@
     <ClInclude Include="sql_test.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="Init_st.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -123,6 +126,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="sql_test.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Init_st.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

@@ -151,6 +151,7 @@
   <ItemGroup>
     <ClInclude Include="complete_notification.h" />
     <ClInclude Include="db_operation.h" />
+    <ClInclude Include="Init_st.h" />
     <ClInclude Include="objPool.h" />
     <ClInclude Include="parse_data.h" />
     <ClInclude Include="parse_import.h" />
@@ -171,6 +172,7 @@
   <ItemGroup>
     <ClCompile Include="complete_notification.cpp" />
     <ClCompile Include="db_operation.cpp" />
+    <ClCompile Include="Init_st.cpp" />
     <ClCompile Include="objPool.cpp" />
     <ClCompile Include="parse_data.cpp" />
     <ClCompile Include="parse_import.cpp" />

@@ -125,3 +125,7 @@ extern LPFN_GETACCEPTEXSOCKADDRS lpfnGetAcceptExSockaddrs;
 
 extern CRITICAL_SECTION g_csSObj;
 extern CRITICAL_SECTION g_csBObj;
+
+extern int g_nCountOfSim; // 保持sim_tbl中卡数量
+extern int g_nCountOfKh;	// 保存kh_tbl中用户数量
+extern int g_nCountOfKhjl;	// 保存khjl_tlb中客户经理数量
