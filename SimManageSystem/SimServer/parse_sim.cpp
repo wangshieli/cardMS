@@ -112,7 +112,7 @@ bool doParseSim(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 
 		_RecordsetPtr pRecord;
 
-		const TCHAR* pSql = _T("select a.*,b.llclx from sim_tbl as a, llc_tbl as b where a.jrhm='%s' and b.llchm=a.llc");
+		const TCHAR* pSql = _T("select a.*,b.llclx from sim_tbl as a, llc_tbl as b where a.jrhm='%s' and b.llchm=a.llchm");
 		TCHAR sql[256];
 		memset(sql, 0x00, 256);
 		_stprintf_s(sql, 256, pSql, strJrhm.c_str());
@@ -137,17 +137,18 @@ bool doParseSim(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 	case SUBCMD_SIM_GET_02:
 	{
 		int nTag = (pObj++)->as<int>();
-		int nStart = 200 * (nTag - 1);
+		int nNeed = (pObj++)->as<int>();
+		int nStart = nNeed * (nTag - 1);
 
 		msgpack::sbuffer sbuf;
 		msgpack::packer<msgpack::sbuffer> msgPack(&sbuf);
 		sbuf.write("\xfb\xfc", 6);
 		_RecordsetPtr pRecord;
 
-		const TCHAR* pSql = _T("select a.*,b.llclx from (select * from sim_tbl limit %d,200) a left join llc_tbl b on b.llchm=a.llc");
+		const TCHAR* pSql = _T("select a.*,b.llclx from (select * from sim_tbl limit %d,%d) a left join llc_tbl b on b.llchm=a.llchm");
 		TCHAR sql[256];
 		memset(sql, 0x00, 256);
-		_stprintf_s(sql, 256, pSql, nStart);
+		_stprintf_s(sql, 256, pSql, nStart, nNeed);
 		if (!GetRecordSetDate(sql, pRecord, nCmd, nSubCmd, nTag, msgPack))
 		{
 			DealLast(sbuf, bobj);
@@ -167,7 +168,7 @@ bool doParseSim(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 	}
 	break;
 
-	case SUBCMD_SIM_GET_03:
+	case SUBCMD_SIM_GET_ICCID:
 	{
 		msgpack::sbuffer sbuf;
 		msgpack::packer<msgpack::sbuffer> msgPack(&sbuf);
@@ -177,7 +178,7 @@ bool doParseSim(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 
 		_RecordsetPtr pRecord;
 
-		const TCHAR* pSql = _T("select a.*,b.llclx from sim_tbl as a, llc_tbl as b where a.iccid='%s' and b.llchm=a.llc");
+		const TCHAR* pSql = _T("select a.*,b.llclx from sim_tbl as a, llc_tbl as b where a.iccid='%s' and b.llchm=a.llchm");
 		TCHAR sql[256];
 		memset(sql, 0x00, 256);
 		_stprintf_s(sql, 256, pSql, strIccid.c_str());
@@ -195,6 +196,48 @@ bool doParseSim(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 		msgPack.pack_array(lRstCount);
 
 		ReturnSimInfo(pRecord, msgPack);
+		DealLast(sbuf, bobj);
+	}
+	break;
+
+	case SUBCMD_SIM_GET_XSRQ:
+	{}
+	break;
+
+	case SUBCMD_SIM_GET_TOTAL:
+	{
+		msgpack::sbuffer sbuf;
+		msgpack::packer<msgpack::sbuffer> msgPack(&sbuf);
+		sbuf.write("\xfb\xfc", 6);
+
+		int nTag = (pObj++)->as<int>();
+		int nNeed = (pObj++)->as<int>();
+		int nStart = nNeed * (nTag - 1);
+
+		const TCHAR* pSql = _T("SELECT * from sim_tbl");
+		_RecordsetPtr pRecord;
+		if (!GetRecordSetDate(pSql, pRecord, nCmd, nSubCmd, msgPack))
+		{
+			DealLast(sbuf, bobj);
+			return false;
+		}
+
+		int lRstCount = pRecord->GetRecordCount();
+		msgPack.pack_array(5);
+		msgPack.pack(nCmd);
+		msgPack.pack(nSubCmd);
+		msgPack.pack(nTag);
+		msgPack.pack(0);
+		msgPack.pack(lRstCount);// 数据条数
+
+		if (lRstCount - nStart >= nNeed)
+			msgPack.pack_array(nNeed);
+		else
+			msgPack.pack_array(lRstCount - nStart);
+
+		_variant_t varNum = pRecord->GetCollect("num");
+		AddData(varNum, msgPack);
+
 		DealLast(sbuf, bobj);
 	}
 	break;

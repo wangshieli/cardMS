@@ -110,9 +110,12 @@ bool doParseKhjl(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 	{
 	case SUBCMD_KHJL_ADD:
 	{
-		std::string strJlmc = (pObj++)->as<std::string>();
-		std::string strLxfs = (pObj++)->as<std::string>();
-		std::string strBz = (pObj++)->as<std::string>();
+		msgpack::object* pArray = (pObj++)->via.array.ptr;
+
+		msgpack::object* pSubObj = (pArray++)->via.array.ptr;
+		std::string strJlxm = (pSubObj++)->as<std::string>();
+		std::string strLxfs = (pSubObj++)->as<std::string>();
+		std::string strBz = (pSubObj++)->as<std::string>();
 
 		msgpack::sbuffer sbuf;
 		msgpack::packer<msgpack::sbuffer> msgPack(&sbuf);
@@ -121,7 +124,7 @@ bool doParseKhjl(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 		const TCHAR* pSql = _T("INSERT INTO khjl_tbl (id,jlxm,lxfs,xgsj,bz) VALUES(null,'%s','%s',now(),'%s')");
 		TCHAR sql[256];
 		memset(sql, 0x00, sizeof(sql));
-		_stprintf_s(sql, 256, pSql, strJlmc.c_str(), strLxfs.c_str(), strBz.c_str());
+		_stprintf_s(sql, 256, pSql, strJlxm.c_str(), strLxfs.c_str(), strBz.c_str());
 		CheckSqlResult(sql, nCmd, nSubCmd, msgPack);
 
 		DealLast(sbuf, bobj);
@@ -197,8 +200,8 @@ FEFT JOIN khjl_tbl b ON b.jlxm='%s'");
 			msgPack.pack(nCmd);
 			msgPack.pack(nSubCmd);
 			msgPack.pack(nSSubCmd);
-			msgPack.pack(0);
 			msgPack.pack(nTag);
+			msgPack.pack(0);
 			msgPack.pack(lRstCount);// 方象訳方
 
 			if (lRstCount - nStart >= nNeed)
@@ -261,8 +264,8 @@ FEFT JOIN khjl_tbl b ON b.jlxm='%s'");
 			msgPack.pack(nCmd);
 			msgPack.pack(nSubCmd);
 			msgPack.pack(nSSubCmd);
-			msgPack.pack(0);
 			msgPack.pack(nTag);
+			msgPack.pack(0);
 			msgPack.pack(lRstCount);// 方象訳方
 
 			if (lRstCount - nStart >= nNeed)

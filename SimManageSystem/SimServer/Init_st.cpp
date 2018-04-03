@@ -108,7 +108,7 @@ int test()
 				_variant_t varIccid = pRecordSim->GetCollect("iccid");
 				pSim->strIccid = (const TCHAR*)(_bstr_t)varIccid;
 
-				mp_sim.insert(make_pair(pSim->id, pSim));
+				pKh->mp_sim.insert(make_pair(pSim->id, pSim));
 
 				pRecordSim->MoveNext();
 				bRtSim = pRecordSim->GetadoEOF();
@@ -120,7 +120,7 @@ int test()
 				pRecordSim = NULL;
 			}
 
-			mp_kh.insert(make_pair(pKh->id, pKh));
+			pKhjl->mp_kh.insert(make_pair(pKh->id, pKh));
 
 			pRecordKh->MoveNext();
 			bRtKh = pRecordKh->GetadoEOF();
@@ -153,15 +153,15 @@ int main()
 {
 	test();
 
-	for (tmp_khjl::iterator iter = mp_khjl.begin(); iter != mp_khjl.end(); iter++)
+	for (tmp_khjl::iterator iter_khjl = mp_khjl.begin(); iter_khjl != mp_khjl.end(); iter_khjl++)
 	{
-		cout << "{" << iter->second->id << "," << iter->second->strJlxm << "," << iter->second->strLxfs << "}" << endl;
-		for (tmp_kh::iterator iter = mp_kh.begin(); iter != mp_kh.end(); iter++)
+		cout << "{" << iter_khjl->second->id << "," << iter_khjl->second->strJlxm << "," << iter_khjl->second->strLxfs << "}" << endl;
+		for (tmp_kh::iterator iter_kh = iter_khjl->second->mp_kh.begin(); iter_kh != iter_khjl->second->mp_kh.end(); iter_kh++)
 		{
-			cout << "\t" << "{" << iter->second->id << "," << iter->second->strKhmc << "," << iter->second->strLxfs << "," << iter->second->strJlxm << "}" << endl;
-			for (tmp_sim::iterator iter = mp_sim.begin(); iter != mp_sim.end(); iter++)
+			cout << "\t" << "{" << iter_kh->second->id << "," << iter_kh->second->strKhmc << "," << iter_kh->second->strLxfs << "," << iter_kh->second->strJlxm << "}" << endl;
+			for (tmp_sim::iterator iter_sim = iter_kh->second->mp_sim.begin(); iter_sim != iter_kh->second->mp_sim.end(); iter_sim++)
 			{
-				cout << "\t\t" << "{" << iter->second->id << "," << iter->second->strJrhm << "," << iter->second->strIccid << "}" << endl;
+				cout << "\t\t" << "{" << iter_sim->second->id << "," << iter_sim->second->strJrhm << "," << iter_sim->second->strIccid << "}" << endl;
 			}
 		}
 	}

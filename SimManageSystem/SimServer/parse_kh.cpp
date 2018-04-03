@@ -49,10 +49,6 @@ bool doParseKh(msgpack::unpacked& result_, BUFFER_OBJ* bobj)
 	{
 	case SUBCMD_KH_ADD:
 	{
-		if (pObj->type == msgpack::type::ARRAY)
-		{
-			_tprintf(_T("test"));
-		}
 		msgpack::object* pArray = (pObj++)->via.array.ptr;
 
 		msgpack::object* pSubObj = (pArray++)->via.array.ptr;
@@ -187,6 +183,10 @@ LEFT JOIN kh_tbl b ON b.khmc='%s'");
 			ReleaseRecordset(pRecord);
 			DealLast(sbuf, bobj);
 		}
+		break;
+
+		case SSUBCMD_KH_KHTOTAL:
+		{}
 		break;
 
 		default:
